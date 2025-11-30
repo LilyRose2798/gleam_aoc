@@ -1,6 +1,8 @@
 import aoc/utils
+import gleam/dict
 import gleam/int
 import gleam/list
+import gleam/result
 
 pub fn parse(input: String) -> #(List(Int), List(Int)) {
   utils.parsed_line_fields(input, utils.unsafe_int_parse)
@@ -19,6 +21,6 @@ pub fn pt_1(input: #(List(Int), List(Int))) -> Int {
 
 pub fn pt_2(input: #(List(Int), List(Int))) -> Int {
   let counts = utils.counts(input.1)
-  list.map(input.0, fn(x) { x * utils.dict_get_or_default(counts, x, 0) })
+  list.map(input.0, fn(x) { x * { dict.get(counts, x) |> result.unwrap(0) } })
   |> int.sum
 }
