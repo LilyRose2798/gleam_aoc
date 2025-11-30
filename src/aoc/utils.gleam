@@ -154,13 +154,13 @@ pub fn unsafe_float_parse(input: String) -> Float {
 }
 
 pub fn int_power(base: Int, of exponent: Int) -> Int {
-  case exponent < 0 {
-    True ->
-      case base {
-        1 | -1 -> base
-        _ -> 0
+  case base {
+    1 | -1 -> base
+    _ ->
+      case exponent < 0 {
+        True -> 0
+        False -> do_int_power(base, exponent, 1)
       }
-    False -> do_int_power(base, exponent, 1)
   }
 }
 
