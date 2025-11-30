@@ -155,7 +155,8 @@ pub fn unsafe_float_parse(input: String) -> Float {
 
 pub fn int_power(base: Int, of exponent: Int) -> Int {
   case base {
-    1 | -1 -> base
+    0 | 1 | -1 -> base
+    2 | -2 -> int.bitwise_shift_left(base, exponent - 1)
     _ ->
       case exponent < 0 {
         True -> 0
