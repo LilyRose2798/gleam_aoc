@@ -107,28 +107,6 @@ pub fn filter_not(list: List(a), discarding f: fn(a) -> Bool) {
   list.filter(list, fn(x) { !f(x) })
 }
 
-pub fn unsafe_guard(
-  when cond: Bool,
-  return message: String,
-  otherwise fun: fn() -> a,
-) -> a {
-  case cond {
-    True -> fun()
-    False -> panic as message
-  }
-}
-
-pub fn unsafe_guard_not(
-  when_not cond: Bool,
-  return message: String,
-  otherwise fun: fn() -> a,
-) -> a {
-  case cond {
-    True -> panic as message
-    False -> fun()
-  }
-}
-
 pub fn unsafe_unwrap(x: Result(a, e)) -> a {
   case x {
     Ok(x) -> x
