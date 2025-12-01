@@ -30,8 +30,9 @@ pub fn pt_1(rotations: List(Int)) -> Int {
 
 pub fn pt_2(rotations: List(Int)) -> Int {
   use position, rotation, _ <- calculate_password(rotations)
-  case rotation < 0 {
-    True -> { 100 - position - rotation } / 100 - { 100 - position } / 100
-    False -> { position + rotation } / 100
+  int.absolute_value(rotation / 100)
+  + case position + rotation % 100 {
+    x if position != 0 && x <= 0 || x >= 100 -> 1
+    _ -> 0
   }
 }
