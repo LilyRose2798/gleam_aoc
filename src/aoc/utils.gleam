@@ -169,6 +169,10 @@ fn do_int_power(base: Int, exponent: Int, acc: Int) -> Int {
   }
 }
 
+pub fn int_ceiling_divide(dividend: Int, divisor: Int) {
+  -{ dividend / -divisor }
+}
+
 pub fn unsafe_int_power(base: Int, of exponent: Float) -> Float {
   case int.power(base, exponent) {
     Ok(x) -> x
