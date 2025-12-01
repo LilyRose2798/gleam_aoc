@@ -4,23 +4,28 @@ import gleam/int
 import gleam/list
 import gleam/result
 
-pub fn parse(input: String) -> #(List(Int), List(Int)) {
-  utils.parsed_line_fields(input, utils.unsafe_int_parse)
-  |> list.transpose
-  |> utils.unsafe_list_to_pair
+pub type Lists {
+  Lists(left: List(Int), right: List(Int))
 }
 
-pub fn pt_1(input: #(List(Int), List(Int))) -> Int {
+pub fn parse(input: String) -> Lists {
+  let assert [left, right] =
+    utils.parsed_line_fields(input, utils.unsafe_int_parse)
+    |> list.transpose
+  Lists(left:, right:)
+}
+
+pub fn pt_1(lists: Lists) -> Int {
   list.map2(
-    list.sort(input.0, int.compare),
-    list.sort(input.1, int.compare),
+    list.sort(lists.left, int.compare),
+    list.sort(lists.right, int.compare),
     utils.int_distance,
   )
   |> int.sum
 }
 
-pub fn pt_2(input: #(List(Int), List(Int))) -> Int {
-  let counts = utils.counts(input.1)
-  list.map(input.0, fn(x) { x * { dict.get(counts, x) |> result.unwrap(0) } })
+pub fn pt_2(lists: Lists) -> Int {
+  let counts = utils.counts(lists.right)
+  list.map(lists.left, fn(x) { x * { dict.get(counts, x) |> result.unwrap(0) } })
   |> int.sum
 }
