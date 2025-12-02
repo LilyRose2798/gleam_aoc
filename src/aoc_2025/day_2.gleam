@@ -3,38 +3,55 @@ import gleam/int
 import gleam/list
 import gleam/string
 
-pub fn parse(input: String) -> List(Int) {
+pub fn parse(input: String) -> List(#(Int, Int)) {
   string.split(input, ",")
   |> list.map(fn(range) {
     let assert Ok(#(first, last)) = string.split_once(range, "-")
       as { "Invalid id range \"" <> range <> "\"" }
     #(utils.unsafe_int_parse(first), utils.unsafe_int_parse(last))
   })
-  |> list.flat_map(fn(r) { list.range(r.0, r.1) })
 }
 
-pub fn pt_1(ids: List(Int)) -> Int {
-  list.filter(ids, fn(id) {
-    let s = int.to_string(id)
-    let l = string.length(s)
-    int.is_even(l) && string.drop_end(s, l / 2) == string.drop_start(s, l / 2)
-  })
-  |> int.sum
+pub fn max_id_length(ranges: List(#(Int, Int))) -> Int {
+  let assert Ok(max_id) =
+    list.flat_map(ranges, fn(r) { [r.0, r.1] }) |> list.max(int.compare)
+  int.to_string(max_id) |> string.length
 }
 
-pub fn pt_2(ids: List(Int)) -> Int {
-  list.filter(ids, fn(id) {
-    let s = int.to_string(id)
-    let l = string.length(s)
-    let cs = string.to_utf_codepoints(s)
-    l > 1
-    && list.any(list.range(1, l / 2), fn(x) {
-      l % x == 0
-      && list.sized_chunk(cs, x)
-      |> list.unique
-      |> list.length
-      == 1
+fn repeat_int(base: Int, mul: Int, by amount: Int) -> Int {
+  do_repeat_int(base, mul, amount, base)
+}
+
+fn do_repeat_int(base: Int, mul: Int, amount: Int, acc) -> Int {
+  case amount {
+    1 -> acc
+    _ -> do_repeat_int(base, mul, amount - 1, mul * acc + base)
+  }
+}
+
+pub fn solve(ranges: List(#(Int, Int)), pt_1: Bool) {
+  let max_id_len = max_id_length(ranges)
+  list.range(1, max_id_len / 2)
+  |> list.flat_map(fn(seq_len) {
+    let mul = utils.int_power(10, seq_len)
+    let range = list.range(mul / 10, mul - 1)
+    case pt_1 {
+      True -> [2]
+      False -> list.range(2, max_id_len / seq_len)
+    }
+    |> list.flat_map(fn(num_groups) {
+      list.map(range, repeat_int(_, mul, num_groups))
     })
   })
+  |> list.filter(fn(id) { list.any(ranges, fn(r) { id >= r.0 && id <= r.1 }) })
+  |> list.unique
   |> int.sum
+}
+
+pub fn pt_1(ranges: List(#(Int, Int))) {
+  solve(ranges, True)
+}
+
+pub fn pt_2(ranges: List(#(Int, Int))) {
+  solve(ranges, False)
 }
