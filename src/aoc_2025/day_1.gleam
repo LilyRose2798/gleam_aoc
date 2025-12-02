@@ -2,6 +2,8 @@ import aoc/utils
 import gleam/int
 import gleam/list
 
+const size = 100
+
 pub fn parse(input: String) -> List(Int) {
   utils.parsed_lines(input, fn(line) {
     case line {
@@ -15,7 +17,7 @@ pub fn parse(input: String) -> List(Int) {
 fn calculate_password(rotations: List(Int), with fun: fn(Int, Int, Int) -> Int) {
   list.fold(rotations, #(50, 0), fn(acc, rotation) {
     let #(position, password) = acc
-    let assert Ok(new_position) = int.modulo(position + rotation, 100)
+    let assert Ok(new_position) = int.modulo(position + rotation, size)
     #(new_position, password + fun(position, rotation, new_position))
   }).1
 }
@@ -31,7 +33,8 @@ pub fn pt_1(rotations: List(Int)) -> Int {
 pub fn pt_2(rotations: List(Int)) -> Int {
   use position, rotation, _ <- calculate_password(rotations)
   case rotation < 0 {
-    True -> { { 100 - position } % 100 - rotation } / 100
-    False -> { position + rotation } / 100
+    True -> { size - position } % size - rotation
+    False -> position + rotation
   }
+  / size
 }
