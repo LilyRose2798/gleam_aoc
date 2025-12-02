@@ -1,4 +1,5 @@
 import aoc/utils
+import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/string
@@ -57,6 +58,7 @@ fn do_repeat_int(base: Int, mul: Int, amount: Int, acc) -> Int {
 
 fn solve(tree: Tree, pt_1: Bool) -> Int {
   let max_id_len = max_id_length(tree)
+  use <- bool.guard(max_id_len < 2, 0)
   list.range(1, max_id_len / 2)
   |> list.flat_map(fn(seq_len) {
     let mul = utils.int_power(10, seq_len)
