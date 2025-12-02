@@ -12,12 +12,6 @@ pub fn parse(input: String) -> List(#(Int, Int)) {
   })
 }
 
-pub fn max_id_length(ranges: List(#(Int, Int))) -> Int {
-  let assert Ok(max_id) =
-    list.flat_map(ranges, fn(r) { [r.0, r.1] }) |> list.max(int.compare)
-  int.to_string(max_id) |> string.length
-}
-
 fn repeat_int(base: Int, mul: Int, by amount: Int) -> Int {
   do_repeat_int(base, mul, amount, base)
 }
@@ -30,7 +24,9 @@ fn do_repeat_int(base: Int, mul: Int, amount: Int, acc) -> Int {
 }
 
 pub fn solve(ranges: List(#(Int, Int)), pt_1: Bool) {
-  let max_id_len = max_id_length(ranges)
+  let assert Ok(max_id) =
+    list.flat_map(ranges, fn(r) { [r.0, r.1] }) |> list.max(int.compare)
+  let max_id_len = int.to_string(max_id) |> string.length
   list.range(1, max_id_len / 2)
   |> list.flat_map(fn(seq_len) {
     let mul = utils.int_power(10, seq_len)
