@@ -21,7 +21,7 @@ pub fn pt_1(ids: List(Int)) -> Int {
   |> int.sum
 }
 
-pub fn pt_2(ids: List(Int)) {
+pub fn pt_2(ids: List(Int)) -> Int {
   list.filter(ids, fn(id) {
     let s = int.to_string(id)
     let l = string.length(s)
