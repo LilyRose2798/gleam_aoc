@@ -30,7 +30,6 @@ pub fn pt_2(ids: List(Int)) {
     && list.any(list.range(1, l / 2), fn(x) {
       l % x == 0
       && list.sized_chunk(cs, x)
-      |> list.map(string.from_utf_codepoints)
       |> list.unique
       |> list.length
       == 1
