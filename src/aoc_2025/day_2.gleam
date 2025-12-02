@@ -23,7 +23,7 @@ fn do_repeat_int(base: Int, mul: Int, amount: Int, acc) -> Int {
   }
 }
 
-pub fn solve(ranges: List(#(Int, Int)), pt_1: Bool) {
+pub fn solve(ranges: List(#(Int, Int)), pt_1: Bool) -> Int {
   let assert Ok(max_id) =
     list.flat_map(ranges, fn(r) { [r.0, r.1] }) |> list.max(int.compare)
   let max_id_len = int.to_string(max_id) |> string.length
@@ -44,10 +44,10 @@ pub fn solve(ranges: List(#(Int, Int)), pt_1: Bool) {
   |> int.sum
 }
 
-pub fn pt_1(ranges: List(#(Int, Int))) {
+pub fn pt_1(ranges: List(#(Int, Int))) -> Int {
   solve(ranges, True)
 }
 
-pub fn pt_2(ranges: List(#(Int, Int))) {
+pub fn pt_2(ranges: List(#(Int, Int))) -> Int {
   solve(ranges, False)
 }
