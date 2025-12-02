@@ -12,3 +12,10 @@ gleamy_structures = ">= 1.2.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+
+[gladvent.2024]
+1 = { pt_1 = 1530215, pt_2 = 26800609 }
+
+[gladvent.2025]
+1 = { pt_1 = 1048, pt_2 = 6498 }
+2 = { pt_1 = 23701357374, pt_2 = 34284458938 }
