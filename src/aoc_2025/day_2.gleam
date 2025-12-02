@@ -7,6 +7,7 @@ pub fn parse(input: String) -> List(Int) {
   string.split(input, ",")
   |> list.map(fn(range) {
     let assert Ok(#(first, last)) = string.split_once(range, "-")
+      as { "Invalid id range \"" <> range <> "\"" }
     #(utils.unsafe_int_parse(first), utils.unsafe_int_parse(last))
   })
   |> list.flat_map(fn(r) { list.range(r.0, r.1) })
