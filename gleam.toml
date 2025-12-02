@@ -8,6 +8,7 @@ repository = { type = "forgejo", host = "whitespace.moe", user = "lily", repo = 
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 gladvent = ">= 2.2.1 and < 3.0.0"
 gleam_community_maths = ">= 2.0.0 and < 3.0.0"
+gleamy_structures = ">= 1.2.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
