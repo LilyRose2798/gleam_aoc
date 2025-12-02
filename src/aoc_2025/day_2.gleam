@@ -69,10 +69,6 @@ fn solve(tree: Tree, pt_1: Bool) -> Int {
       list.map(range, repeat_int(_, mul, num_groups))
     })
   })
-  |> fn(l) {
-    echo list.length(l)
-    l
-  }
   |> list.filter(in_tree(tree, _))
   |> list.unique
   |> int.sum
