@@ -1,9 +1,14 @@
 import aoc/utils
 import gleam/int
 import gleam/list
+import gleam/string
 
 pub fn parse(input: String) -> List(List(Int)) {
-  utils.parsed_line_fields_by(input, "", utils.unsafe_int_parse)
+  utils.parsed_lines(input, fn(line) {
+    string.to_utf_codepoints(line)
+    |> list.map(string.utf_codepoint_to_int)
+    |> list.map(int.subtract(_, 48))
+  })
 }
 
 fn keep_till_max(xs: List(Int)) -> #(Int, List(Int)) {
