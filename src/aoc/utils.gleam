@@ -266,3 +266,8 @@ pub fn int_distance(a: Int, b: Int) -> Int {
 pub fn float_distance(a: Float, b: Float) -> Float {
   float.absolute_value(a -. b)
 }
+
+pub fn tap(x: a, with fun: fn(a) -> b) -> a {
+  fun(x)
+  x
+}
