@@ -8,7 +8,7 @@ pub fn parse(input: String) -> List(List(Int)) {
   utils.parsed_line_fields_by(input, "", utils.unsafe_int_parse)
 }
 
-fn solve(banks: List(List(Int)), needed: Int) {
+fn solve(banks: List(List(Int)), needed: Int) -> Int {
   list.map(banks, fn(bank) {
     do_solve(
       list.index_map(bank, pair.new)
@@ -39,10 +39,10 @@ fn do_solve(batteries: List(#(Int, Int)), needed: Int, acc: List(Int)) -> Int {
   }
 }
 
-pub fn pt_1(banks: List(List(Int))) {
+pub fn pt_1(banks: List(List(Int))) -> Int {
   solve(banks, 2)
 }
 
-pub fn pt_2(banks: List(List(Int))) {
+pub fn pt_2(banks: List(List(Int))) -> Int {
   solve(banks, 12)
 }
