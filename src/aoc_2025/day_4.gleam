@@ -1,5 +1,4 @@
 import aoc/utils
-import gleam/function
 import gleam/list
 import gleam/set.{type Set}
 import gleam/string
