@@ -30,44 +30,38 @@ pub fn parse(input: String) -> Grid {
   Grid(width:, height:, rolls:)
 }
 
-const neighbour_offsets = [
-  Coord(x: -1, y: -1),
-  Coord(x: -1, y: 1),
-  Coord(x: 1, y: -1),
-  Coord(x: 1, y: 1),
-  Coord(x: 0, y: -1),
-  Coord(x: 0, y: 1),
-  Coord(x: 1, y: 0),
-  Coord(x: -1, y: 0),
-]
-
-fn add_coords(a: Coord, b: Coord) -> Coord {
-  Coord(x: a.x + b.x, y: a.y + b.y)
-}
-
-fn num_neighbours(s: Set(Coord), c: Coord) -> Int {
-  list.map(neighbour_offsets, add_coords(c, _))
-  |> list.map(set.contains(s, _))
-  |> list.count(function.identity)
+fn neighbours(c: Coord) -> List(Coord) {
+  let Coord(x:, y:) = c
+  [
+    Coord(x: x - 1, y: y - 1),
+    Coord(x: x - 1, y: y + 1),
+    Coord(x: x + 1, y: y - 1),
+    Coord(x: x + 1, y: y + 1),
+    Coord(x:, y: y - 1),
+    Coord(x:, y: y + 1),
+    Coord(x: x + 1, y:),
+    Coord(x: x - 1, y:),
+  ]
 }
 
 fn is_accessible(rolls: Set(Coord), c: Coord) -> Bool {
-  set.contains(rolls, c) && num_neighbours(rolls, c) < 4
+  list.map(neighbours(c), set.contains(rolls, _))
+  |> list.count(function.identity)
+  < 4
 }
 
 pub fn pt_1(grid: Grid) -> Int {
   set.filter(grid.rolls, is_accessible(grid.rolls, _)) |> set.size
 }
 
-fn do_flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
-  case is_accessible(acc.0, c) {
+fn flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
+  case set.contains(acc.0, c) && is_accessible(acc.0, c) {
     False -> acc
     True ->
-      list.map(neighbour_offsets, add_coords(c, _))
-      |> list.fold(#(set.delete(acc.0, c), acc.1 + 1), do_flood_remove)
+      list.fold(neighbours(c), #(set.delete(acc.0, c), acc.1 + 1), flood_remove)
   }
 }
 
 pub fn pt_2(grid: Grid) -> Int {
-  set.fold(grid.rolls, #(grid.rolls, 0), do_flood_remove).1
+  set.fold(grid.rolls, #(grid.rolls, 0), flood_remove).1
 }
