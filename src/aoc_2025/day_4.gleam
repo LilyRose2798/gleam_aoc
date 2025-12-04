@@ -8,26 +8,16 @@ pub type Coord {
   Coord(x: Int, y: Int)
 }
 
-pub type Grid {
-  Grid(width: Int, height: Int, rolls: Set(Coord))
-}
-
-pub fn parse(input: String) -> Grid {
-  let ls = utils.lines(input)
-  let height = list.length(ls)
-  let assert [first, ..] = ls
-  let width = string.length(first)
-  let rolls =
-    list.index_fold(ls, set.new(), fn(rolls, l, y) {
-      list.index_fold(string.split(l, ""), rolls, fn(rolls, c, x) {
-        case c {
-          "." -> rolls
-          "@" -> set.insert(rolls, Coord(x:, y:))
-          _ -> panic as { "Invalid input character '" <> c <> "'" }
-        }
-      })
+pub fn parse(input: String) -> Set(Coord) {
+  list.index_fold(utils.lines(input), set.new(), fn(rolls, l, y) {
+    list.index_fold(string.split(l, ""), rolls, fn(rolls, c, x) {
+      case c {
+        "." -> rolls
+        "@" -> set.insert(rolls, Coord(x:, y:))
+        _ -> panic as { "Invalid input character '" <> c <> "'" }
+      }
     })
-  Grid(width:, height:, rolls:)
+  })
 }
 
 fn neighbours(c: Coord) -> List(Coord) {
@@ -50,8 +40,8 @@ fn is_accessible(rolls: Set(Coord), c: Coord) -> Bool {
   < 4
 }
 
-pub fn pt_1(grid: Grid) -> Int {
-  set.filter(grid.rolls, is_accessible(grid.rolls, _)) |> set.size
+pub fn pt_1(rolls: Set(Coord)) -> Int {
+  set.filter(rolls, is_accessible(rolls, _)) |> set.size
 }
 
 fn flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
@@ -62,6 +52,6 @@ fn flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
   }
 }
 
-pub fn pt_2(grid: Grid) -> Int {
-  set.fold(grid.rolls, #(grid.rolls, 0), flood_remove).1
+pub fn pt_2(rolls: Set(Coord)) -> Int {
+  set.fold(rolls, #(rolls, 0), flood_remove).1
 }
