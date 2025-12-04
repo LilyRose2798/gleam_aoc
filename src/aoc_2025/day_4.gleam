@@ -1,6 +1,5 @@
 import aoc/utils
 import gleam/function
-import gleam/int
 import gleam/list
 import gleam/set.{type Set}
 import gleam/string
@@ -47,8 +46,7 @@ fn add_coords(a: Coord, b: Coord) -> Coord {
 }
 
 fn num_neighbours(s: Set(Coord), c: Coord) -> Int {
-  neighbour_offsets
-  |> list.map(add_coords(c, _))
+  list.map(neighbour_offsets, add_coords(c, _))
   |> list.map(set.contains(s, _))
   |> list.count(function.identity)
 }
@@ -58,34 +56,18 @@ fn is_accessible(rolls: Set(Coord), c: Coord) -> Bool {
 }
 
 pub fn pt_1(grid: Grid) -> Int {
-  list.map(list.range(0, grid.height), fn(y) {
-    list.count(list.range(0, grid.width), fn(x) {
-      is_accessible(grid.rolls, Coord(x:, y:))
-    })
-  })
-  |> int.sum
+  set.filter(grid.rolls, is_accessible(grid.rolls, _)) |> set.size
 }
 
-fn do_flood_remove(
-  rolls: Set(Coord),
-  c: Coord,
-  removed: Int,
-) -> #(Set(Coord), Int) {
-  case is_accessible(rolls, c) {
-    False -> #(rolls, removed)
+fn do_flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
+  case is_accessible(acc.0, c) {
+    False -> acc
     True ->
-      neighbour_offsets
-      |> list.map(add_coords(c, _))
-      |> list.fold(#(set.delete(rolls, c), removed + 1), fn(acc, c) {
-        do_flood_remove(acc.0, c, acc.1)
-      })
+      list.map(neighbour_offsets, add_coords(c, _))
+      |> list.fold(#(set.delete(acc.0, c), acc.1 + 1), do_flood_remove)
   }
 }
 
 pub fn pt_2(grid: Grid) -> Int {
-  list.fold(list.range(0, grid.height), #(grid.rolls, 0), fn(acc, y) {
-    list.fold(list.range(0, grid.width), #(acc.0, acc.1), fn(acc, x) {
-      do_flood_remove(acc.0, Coord(x:, y:), acc.1)
-    })
-  }).1
+  set.fold(grid.rolls, #(grid.rolls, 0), do_flood_remove).1
 }
