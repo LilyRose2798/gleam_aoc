@@ -1,22 +1,27 @@
 import aoc/utils
+import gleam/dict.{type Dict}
 import gleam/list
-import gleam/set.{type Set}
+import gleam/set
 import gleam/string
 
 pub type Coord {
   Coord(x: Int, y: Int)
 }
 
-pub fn parse(input: String) -> Set(Coord) {
-  list.index_fold(utils.lines(input), set.new(), fn(rolls, l, y) {
-    list.index_fold(string.split(l, ""), rolls, fn(rolls, c, x) {
-      case c {
-        "." -> rolls
-        "@" -> set.insert(rolls, Coord(x:, y:))
-        _ -> panic as { "Invalid input character '" <> c <> "'" }
-      }
+pub fn parse(input: String) -> Dict(Coord, Int) {
+  let l =
+    list.index_fold(utils.lines(input), [], fn(rolls, l, y) {
+      list.index_fold(string.split(l, ""), rolls, fn(rolls, c, x) {
+        case c {
+          "." -> rolls
+          "@" -> [Coord(x:, y:), ..rolls]
+          _ -> panic as { "Invalid input character '" <> c <> "'" }
+        }
+      })
     })
-  })
+  let s = set.from_list(l)
+  list.map(l, fn(c) { #(c, list.count(neighbours(c), set.contains(s, _))) })
+  |> dict.from_list
 }
 
 fn neighbours(c: Coord) -> List(Coord) {
@@ -33,22 +38,27 @@ fn neighbours(c: Coord) -> List(Coord) {
   ]
 }
 
-fn is_accessible(rolls: Set(Coord), c: Coord) -> Bool {
-  list.count(neighbours(c), set.contains(rolls, _)) < 4
+pub fn pt_1(rolls: Dict(Coord, Int)) -> Int {
+  dict.filter(rolls, fn(_, n) { n < 4 }) |> dict.size
 }
 
-pub fn pt_1(rolls: Set(Coord)) -> Int {
-  set.filter(rolls, is_accessible(rolls, _)) |> set.size
+fn flood_remove(
+  acc: #(Dict(Coord, Int), Int),
+  c: Coord,
+) -> #(Dict(Coord, Int), Int) {
+  let #(d, n, cs) =
+    list.fold(neighbours(c), #(acc.0, acc.1, []), fn(acc, c) {
+      case dict.get(acc.0, c) {
+        Ok(n) if n <= 4 -> #(dict.delete(acc.0, c), acc.1 + 1, [c, ..acc.2])
+        Ok(n) -> #(dict.insert(acc.0, c, n - 1), acc.1, acc.2)
+        Error(Nil) -> acc
+      }
+    })
+  list.fold(cs, #(d, n), flood_remove)
 }
 
-fn flood_remove(acc: #(Set(Coord), Int), c: Coord) -> #(Set(Coord), Int) {
-  case set.contains(acc.0, c) && is_accessible(acc.0, c) {
-    False -> acc
-    True ->
-      list.fold(neighbours(c), #(set.delete(acc.0, c), acc.1 + 1), flood_remove)
-  }
-}
-
-pub fn pt_2(rolls: Set(Coord)) -> Int {
-  set.fold(rolls, #(rolls, 0), flood_remove).1
+pub fn pt_2(rolls: Dict(Coord, Int)) -> Int {
+  let dd = dict.filter(rolls, fn(_, n) { n < 4 })
+  let cs = dict.keys(dd)
+  list.fold(cs, #(dict.drop(rolls, cs), dict.size(dd)), flood_remove).1
 }
