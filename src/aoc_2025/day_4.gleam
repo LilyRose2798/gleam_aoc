@@ -35,9 +35,7 @@ fn neighbours(c: Coord) -> List(Coord) {
 }
 
 fn is_accessible(rolls: Set(Coord), c: Coord) -> Bool {
-  list.map(neighbours(c), set.contains(rolls, _))
-  |> list.count(function.identity)
-  < 4
+  list.count(neighbours(c), set.contains(rolls, _)) < 4
 }
 
 pub fn pt_1(rolls: Set(Coord)) -> Int {
