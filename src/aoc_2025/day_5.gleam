@@ -39,58 +39,37 @@ pub fn pt_1(inventory: Inventory) {
   })
 }
 
-fn split_range(
-  id_ranges: List(IdRange),
-  existing_id_range: IdRange,
-) -> List(IdRange) {
-  do_split_range(id_ranges, existing_id_range, [])
-}
-
-fn do_split_range(
-  id_ranges: List(IdRange),
-  existing_id_range: IdRange,
-  acc: List(IdRange),
-) -> List(IdRange) {
-  case id_ranges {
-    [] -> acc
-    [IdRange(start:, end:) as id_range, ..id_ranges]
-      if existing_id_range.end < start || existing_id_range.start > end
-    -> do_split_range(id_ranges, existing_id_range, [id_range, ..acc])
-    [IdRange(start:, end:), ..id_ranges]
-      if existing_id_range.start <= start && existing_id_range.end >= end
-    -> do_split_range(id_ranges, existing_id_range, acc)
-    [IdRange(start:, end:), ..id_ranges]
-      if existing_id_range.start > start && existing_id_range.end < end
-    ->
-      do_split_range(id_ranges, existing_id_range, [
-        IdRange(start:, end: existing_id_range.start - 1),
-        IdRange(start: existing_id_range.end + 1, end:),
-        ..acc
-      ])
-    [IdRange(start:, end:), ..id_ranges]
-      if existing_id_range.start <= start && existing_id_range.end < end
-    ->
-      do_split_range(id_ranges, existing_id_range, [
-        IdRange(start: existing_id_range.end + 1, end:),
-        ..acc
-      ])
-    [IdRange(start:, end:), ..id_ranges]
-      if existing_id_range.start > start && existing_id_range.end >= end
-    ->
-      do_split_range(id_ranges, existing_id_range, [
-        IdRange(start:, end: existing_id_range.start - 1),
-        ..acc
-      ])
-    [id_range, ..id_ranges] ->
-      do_split_range(id_ranges, existing_id_range, [id_range, ..acc])
-  }
-}
-
 pub fn pt_2(inventory: Inventory) {
   list.fold(inventory.fresh_id_ranges, #([], 0), fn(acc, id_range) {
     #(
       [id_range, ..acc.0],
-      list.fold(acc.0, [id_range], split_range)
+      list.fold(acc.0, [id_range], fn(acc, existing_id_range) {
+        list.fold(acc, [], fn(acc, id_range) {
+          case id_range {
+            IdRange(start:, end:)
+              if existing_id_range.end < start || existing_id_range.start > end
+            -> [id_range, ..acc]
+            IdRange(start:, end:)
+              if existing_id_range.start <= start
+              && existing_id_range.end >= end
+            -> acc
+            IdRange(start:, end:)
+              if existing_id_range.start > start && existing_id_range.end < end
+            -> [
+              IdRange(start:, end: existing_id_range.start - 1),
+              IdRange(start: existing_id_range.end + 1, end:),
+              ..acc
+            ]
+            IdRange(start:, end:)
+              if existing_id_range.start <= start && existing_id_range.end < end
+            -> [IdRange(start: existing_id_range.end + 1, end:), ..acc]
+            IdRange(start:, end:)
+              if existing_id_range.start > start && existing_id_range.end >= end
+            -> [IdRange(start:, end: existing_id_range.start - 1), ..acc]
+            _ -> [id_range, ..acc]
+          }
+        })
+      })
         |> list.fold(acc.1, fn(acc, id_range) {
           acc + id_range.end - id_range.start + 1
         }),
