@@ -15,10 +15,11 @@ pub type Inventory {
 }
 
 pub fn parse(input: String) -> Inventory {
-  let assert Ok(#(start, end)) = string.split_once(input, "\n\n")
+  let assert Ok(#(fresh_id_ranges, available_ids)) =
+    string.split_once(input, "\n\n")
     as "Expected two blocks in input"
   let fresh_id_ranges =
-    utils.parsed_lines(start, fn(line) {
+    utils.parsed_lines(fresh_id_ranges, fn(line) {
       let assert Ok(#(start, end)) = string.split_once(line, "-")
         as { "Invalid range \"" <> line <> "\"" }
       let assert Ok(start) = int.parse(start)
@@ -26,7 +27,7 @@ pub fn parse(input: String) -> Inventory {
       let assert Ok(end) = int.parse(end) as { "Invalid ID \"" <> end <> "\"" }
       IdRange(start:, end:)
     })
-  let available_ids = utils.parsed_lines(end, utils.unsafe_int_parse)
+  let available_ids = utils.parsed_lines(available_ids, utils.unsafe_int_parse)
   Inventory(fresh_id_ranges:, available_ids:)
 }
 
