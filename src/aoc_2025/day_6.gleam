@@ -35,9 +35,7 @@ pub fn pt_2(input: #(List(fn(List(Int)) -> Int), List(String))) -> Int {
     case list.filter(col, fn(x) { x != space }) {
       [] -> #([cur_group, ..groups], [])
       col -> #(groups, [
-        list.fold(col, 0, fn(acc, x) {
-          10 * acc + string.utf_codepoint_to_int(x) - 48
-        }),
+        string.from_utf_codepoints(col) |> utils.unsafe_int_parse,
         ..cur_group
       ])
     }
