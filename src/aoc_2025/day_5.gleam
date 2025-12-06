@@ -32,12 +32,28 @@ pub fn parse(input: String) -> Inventory {
   Inventory(fresh_id_ranges:, available_ids:)
 }
 
+fn do_count(
+  orig_id_ranges: List(IdRange),
+  id_ranges: List(IdRange),
+  ids: List(Id),
+  count: Int,
+) -> Int {
+  case id_ranges, ids {
+    _, [] -> count
+    [], [_, ..ids] -> do_count(orig_id_ranges, orig_id_ranges, ids, count)
+    [IdRange(start:, end:), ..], [id, ..ids] if id >= start && id <= end ->
+      do_count(orig_id_ranges, orig_id_ranges, ids, count + 1)
+    [_, ..id_ranges], [_, ..] -> do_count(orig_id_ranges, id_ranges, ids, count)
+  }
+}
+
 pub fn pt_1(inventory: Inventory) -> Int {
-  list.count(inventory.available_ids, fn(id) {
-    list.any(inventory.fresh_id_ranges, fn(id_range) {
-      id >= id_range.start && id <= id_range.end
-    })
-  })
+  do_count(
+    inventory.fresh_id_ranges,
+    inventory.fresh_id_ranges,
+    inventory.available_ids,
+    0,
+  )
 }
 
 fn do_total_ids(id_ranges: List(IdRange), cur_end: Int, total_ids: Int) -> Int {
