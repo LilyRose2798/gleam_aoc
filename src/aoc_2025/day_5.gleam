@@ -1,6 +1,7 @@
 import aoc/utils
 import gleam/int
 import gleam/list
+import gleam/order
 import gleam/pair
 import gleam/string
 
@@ -40,22 +41,24 @@ pub fn pt_1(inventory: Inventory) -> Int {
   })
 }
 
+fn do_total_ids(id_ranges: List(IdRange), cur_end: Int, total_ids: Int) -> Int {
+  case id_ranges {
+    [] -> total_ids
+    [IdRange(start:, end:), ..id_ranges] if start > cur_end ->
+      do_total_ids(id_ranges, end, total_ids + end - start + 1)
+    [IdRange(end:, ..), ..id_ranges] if end > cur_end ->
+      do_total_ids(id_ranges, end, total_ids + end - cur_end)
+    [_, ..id_ranges] -> do_total_ids(id_ranges, cur_end, total_ids)
+  }
+}
+
 pub fn pt_2(inventory: Inventory) -> Int {
   list.sort(inventory.fresh_id_ranges, fn(a, b) {
-    int.compare(a.start, b.start)
-  })
-  |> list.fold(#(0, 0), fn(acc, id_range) {
-    case acc, id_range {
-      #(cur_end, total_ids), IdRange(start:, end:) if start > cur_end -> #(
-        end,
-        total_ids + end - start + 1,
-      )
-      #(cur_end, total_ids), IdRange(end:, ..) if end > cur_end -> #(
-        end,
-        total_ids + end - cur_end,
-      )
-      _, _ -> acc
+    case Nil {
+      _ if a.start < b.start -> order.Lt
+      _ if a.start > b.start -> order.Gt
+      _ -> order.Eq
     }
   })
-  |> pair.second
+  |> do_total_ids(0, 0)
 }
