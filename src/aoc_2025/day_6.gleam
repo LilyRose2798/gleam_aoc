@@ -30,21 +30,28 @@ pub fn pt_1(input: #(List(String), List(fn(List(Int)) -> Int))) -> Int {
   |> solve(ops)
 }
 
+fn do_group_columns(
+  chars: List(List(UtfCodepoint)),
+  groups: List(List(Int)),
+  cur_group: List(Int),
+) -> List(List(Int)) {
+  case chars {
+    [] -> list.reverse([cur_group, ..groups])
+    [[], ..chars] -> do_group_columns(chars, [cur_group, ..groups], [])
+    [cs, ..chars] ->
+      do_group_columns(chars, groups, [
+        string.from_utf_codepoints(cs) |> utils.unsafe_int_parse,
+        ..cur_group
+      ])
+  }
+}
+
 pub fn pt_2(input: #(List(String), List(fn(List(Int)) -> Int))) -> Int {
   let #(lines, ops) = input
   let assert Ok(space) = string.utf_codepoint(32)
   list.map(lines, string.to_utf_codepoints)
   |> list.transpose
-  |> list.fold(#([], []), fn(acc, col) {
-    let #(groups, cur_group) = acc
-    case list.filter(col, fn(x) { x != space }) {
-      [] -> #([cur_group, ..groups], [])
-      col -> #(groups, [
-        string.from_utf_codepoints(col) |> utils.unsafe_int_parse,
-        ..cur_group
-      ])
-    }
-  })
-  |> fn(p) { list.reverse([p.1, ..p.0]) }
+  |> list.map(list.filter(_, fn(c) { c != space }))
+  |> do_group_columns([], [])
   |> solve(ops)
 }
