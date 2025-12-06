@@ -3,9 +3,10 @@ import gleam/int
 import gleam/list
 import gleam/string
 
-pub fn parse(input: String) -> #(List(fn(List(Int)) -> Int), List(String)) {
+pub fn parse(input: String) -> #(List(String), List(fn(List(Int)) -> Int)) {
   let assert [operations, ..lines] = utils.lines(input) |> list.reverse
   #(
+    list.reverse(lines),
     utils.parsed_fields(operations, fn(op) {
       case op {
         "+" -> int.sum
@@ -13,21 +14,26 @@ pub fn parse(input: String) -> #(List(fn(List(Int)) -> Int), List(String)) {
         _ -> panic as { "Invalid operation \"" <> op <> "\"" }
       }
     }),
-    list.reverse(lines),
   )
 }
 
-pub fn pt_1(input: #(List(fn(List(Int)) -> Int), List(String))) -> Int {
-  list.map(input.1, utils.parsed_fields(_, utils.unsafe_int_parse))
-  |> list.transpose
-  |> list.zip(input.0)
+fn solve(nums: List(List(Int)), ops: List(fn(List(Int)) -> Int)) -> Int {
+  list.zip(nums, ops)
   |> list.map(fn(p) { p.1(p.0) })
   |> int.sum
 }
 
-pub fn pt_2(input: #(List(fn(List(Int)) -> Int), List(String))) -> Int {
+pub fn pt_1(input: #(List(String), List(fn(List(Int)) -> Int))) -> Int {
+  let #(lines, ops) = input
+  list.map(lines, utils.parsed_fields(_, utils.unsafe_int_parse))
+  |> list.transpose
+  |> solve(ops)
+}
+
+pub fn pt_2(input: #(List(String), List(fn(List(Int)) -> Int))) -> Int {
+  let #(lines, ops) = input
   let assert Ok(space) = string.utf_codepoint(32)
-  list.map(input.1, string.to_utf_codepoints)
+  list.map(lines, string.to_utf_codepoints)
   |> list.transpose
   |> list.fold(#([], []), fn(acc, col) {
     let #(groups, cur_group) = acc
@@ -40,7 +46,5 @@ pub fn pt_2(input: #(List(fn(List(Int)) -> Int), List(String))) -> Int {
     }
   })
   |> fn(p) { list.reverse([p.1, ..p.0]) }
-  |> list.zip(input.0)
-  |> list.map(fn(p) { p.1(p.0) })
-  |> int.sum
+  |> solve(ops)
 }
