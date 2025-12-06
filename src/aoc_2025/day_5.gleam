@@ -2,7 +2,6 @@ import aoc/utils
 import gleam/int
 import gleam/list
 import gleam/order
-import gleam/pair
 import gleam/string
 
 pub type Id =
