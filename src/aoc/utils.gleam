@@ -25,7 +25,6 @@ pub fn parsed_lines(input: String, with fun: fn(String) -> a) -> List(a) {
 
 pub fn fields_by(input: String, by separator: String) -> List(String) {
   string.split(input, separator)
-  |> list.map(string.trim)
   |> list.filter(fn(f) { f != "" })
 }
 
