@@ -5,21 +5,20 @@ import gleam/string
 
 pub fn parse(input: String) -> #(List(fn(List(Int)) -> Int), List(String)) {
   let assert [operations, ..lines] = utils.lines(input) |> list.reverse
-  let operations =
-    utils.fields(operations)
-    |> list.map(fn(op) {
+  #(
+    utils.parsed_fields(operations, fn(op) {
       case op {
         "+" -> int.sum
         "*" -> int.product
         _ -> panic as { "Invalid operation \"" <> op <> "\"" }
       }
-    })
-  #(operations, list.reverse(lines))
+    }),
+    list.reverse(lines),
+  )
 }
 
 pub fn pt_1(input: #(List(fn(List(Int)) -> Int), List(String))) -> Int {
-  list.map(input.1, utils.fields)
-  |> list.map(list.map(_, utils.unsafe_int_parse))
+  list.map(input.1, utils.parsed_fields(_, utils.unsafe_int_parse))
   |> list.transpose
   |> list.zip(input.0)
   |> list.map(fn(p) { p.1(p.0) })
