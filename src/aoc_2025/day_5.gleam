@@ -1,6 +1,7 @@
 import aoc/utils
 import gleam/int
 import gleam/list
+import gleam/pair
 import gleam/string
 
 pub type Id =
@@ -40,42 +41,21 @@ pub fn pt_1(inventory: Inventory) -> Int {
 }
 
 pub fn pt_2(inventory: Inventory) -> Int {
-  list.fold(inventory.fresh_id_ranges, #([], 0), fn(acc, id_range) {
-    let #(seen_id_ranges, total_ids) = acc
-    #(
-      [id_range, ..seen_id_ranges],
-      list.fold(seen_id_ranges, [id_range], fn(split_id_ranges, seen_id_range) {
-        list.fold(split_id_ranges, [], fn(split_id_ranges, id_range) {
-          case id_range {
-            IdRange(start:, end:)
-              if seen_id_range.end < start || seen_id_range.start > end
-            -> [id_range, ..split_id_ranges]
-            IdRange(start:, end:)
-              if seen_id_range.start <= start && seen_id_range.end >= end
-            -> split_id_ranges
-            IdRange(start:, end:)
-              if seen_id_range.start > start && seen_id_range.end < end
-            -> [
-              IdRange(start:, end: seen_id_range.start - 1),
-              IdRange(start: seen_id_range.end + 1, end:),
-              ..split_id_ranges
-            ]
-            IdRange(start:, end:)
-              if seen_id_range.start <= start && seen_id_range.end < end
-            -> [IdRange(start: seen_id_range.end + 1, end:), ..split_id_ranges]
-            IdRange(start:, end:)
-              if seen_id_range.start > start && seen_id_range.end >= end
-            -> [
-              IdRange(start:, end: seen_id_range.start - 1),
-              ..split_id_ranges
-            ]
-            _ -> [id_range, ..split_id_ranges]
-          }
-        })
-      })
-        |> list.fold(total_ids, fn(total_ids, id_range) {
-          total_ids + id_range.end - id_range.start + 1
-        }),
-    )
-  }).1
+  list.sort(inventory.fresh_id_ranges, fn(a, b) {
+    int.compare(a.start, b.start)
+  })
+  |> list.fold(#(0, 0), fn(acc, id_range) {
+    case acc, id_range {
+      #(cur_end, total_ids), IdRange(start:, end:) if start > cur_end -> #(
+        end,
+        total_ids + end - start + 1,
+      )
+      #(cur_end, total_ids), IdRange(end:, ..) if end > cur_end -> #(
+        end,
+        total_ids + end - cur_end,
+      )
+      _, _ -> acc
+    }
+  })
+  |> pair.second
 }
