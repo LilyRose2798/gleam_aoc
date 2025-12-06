@@ -31,7 +31,7 @@ pub fn parse(input: String) -> Inventory {
   Inventory(fresh_id_ranges:, available_ids:)
 }
 
-pub fn pt_1(inventory: Inventory) {
+pub fn pt_1(inventory: Inventory) -> Int {
   list.count(inventory.available_ids, fn(id) {
     list.any(inventory.fresh_id_ranges, fn(id_range) {
       id >= id_range.start && id <= id_range.end
@@ -39,7 +39,7 @@ pub fn pt_1(inventory: Inventory) {
   })
 }
 
-pub fn pt_2(inventory: Inventory) {
+pub fn pt_2(inventory: Inventory) -> Int {
   list.fold(inventory.fresh_id_ranges, #([], 0), fn(acc, id_range) {
     let #(seen_id_ranges, total_ids) = acc
     #(
