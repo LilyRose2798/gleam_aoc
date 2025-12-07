@@ -25,7 +25,7 @@ pub fn parse(input: String) -> #(Set(Int), List(Set(Int))) {
   #(beam_positions, splitter_positions)
 }
 
-pub fn pt_1(positions: #(Set(Int), List(Set(Int)))) {
+pub fn pt_1(positions: #(Set(Int), List(Set(Int)))) -> Int {
   let #(beam_positions, splitter_positions) = positions
   list.fold(
     splitter_positions,
@@ -44,7 +44,7 @@ pub fn pt_1(positions: #(Set(Int), List(Set(Int)))) {
   ).1
 }
 
-pub fn pt_2(positions: #(Set(Int), List(Set(Int)))) {
+pub fn pt_2(positions: #(Set(Int), List(Set(Int)))) -> Int {
   let #(beam_positions, splitter_positions) = positions
   let beam_positions =
     set.to_list(beam_positions) |> list.map(pair.new(_, 1)) |> dict.from_list
