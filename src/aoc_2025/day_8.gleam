@@ -29,7 +29,7 @@ type State {
   )
 }
 
-fn distance_cubed(c: Connection) -> Int {
+fn distance_squared(c: Connection) -> Int {
   let dx = c.from.x - c.to.x
   let dy = c.from.y - c.to.y
   let dz = c.from.z - c.to.z
@@ -40,7 +40,9 @@ fn make_state(boxes: List(Box)) -> State {
   let available_connections =
     list.combination_pairs(boxes)
     |> list.map(fn(p) { Connection(from: p.0, to: p.1) })
-    |> list.sort(fn(a, b) { int.compare(distance_cubed(a), distance_cubed(b)) })
+    |> list.sort(fn(a, b) {
+      int.compare(distance_squared(a), distance_squared(b))
+    })
   let connections = set.new()
   let circuits = list.map(boxes, set.insert(set.new(), _))
   State(available_connections:, connections:, circuits:)
