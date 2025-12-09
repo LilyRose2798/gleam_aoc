@@ -38,7 +38,7 @@ pub fn pt_2(tiles: List(Coord)) -> Int {
   let edges =
     list.window_by_2([last, ..tiles])
     |> list.map(fn(p) { Edge(from: p.0, to: p.1) })
-  let assert Ok(#(_, _, max)) =
+  let assert Ok(#(_, _, max_area)) =
     list.combination_pairs(tiles)
     |> list.map(fn(p) { #(p.0, p.1, area(p.0, p.1)) })
     |> list.sort(fn(a, b) {
@@ -79,5 +79,5 @@ pub fn pt_2(tiles: List(Coord)) -> Int {
       })
     })
     as "No boxes without inclusions found"
-  max
+  max_area
 }
