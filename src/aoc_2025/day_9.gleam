@@ -2,6 +2,7 @@ import aoc/utils
 import gleam/bool
 import gleam/int
 import gleam/list
+import gleam/order
 import gleam/string
 
 pub type Coord {
@@ -29,14 +30,14 @@ pub fn pt_1(tiles: List(Coord)) {
   max
 }
 
-fn has_no_inclusions(tile_pairs: List(#(Coord, Coord)), pos: #(Coord, Coord)) {
-  let #(min_x, max_x) = case pos {
-    #(a, b) if a.x <= b.x -> #(a.x, b.x)
-    #(a, b) -> #(b.x, a.x)
+fn has_inclusions(tile_pairs: List(#(Coord, Coord)), a: Coord, b: Coord) {
+  let #(min_x, max_x) = case a, b {
+    a, b if a.x <= b.x -> #(a.x, b.x)
+    a, b -> #(b.x, a.x)
   }
-  let #(min_y, max_y) = case pos {
-    #(a, b) if a.y <= b.y -> #(a.y, b.y)
-    #(a, b) -> #(b.y, a.y)
+  let #(min_y, max_y) = case a, b {
+    a, b if a.y <= b.y -> #(a.y, b.y)
+    a, b -> #(b.y, a.y)
   }
   list.any(tile_pairs, fn(pos) {
     case pos {
@@ -58,17 +59,22 @@ fn has_no_inclusions(tile_pairs: List(#(Coord, Coord)), pos: #(Coord, Coord)) {
       }
     }
   })
-  |> bool.negate
 }
 
 pub fn pt_2(tiles: List(Coord)) {
   let assert Ok(last) = list.last(tiles)
   let tile_pairs = list.window_by_2([last, ..tiles])
-  let assert Ok(max) =
+  let assert Ok(#(_, _, max)) =
     list.combination_pairs(tiles)
-    |> list.filter(has_no_inclusions(tile_pairs, _))
-    |> list.map(fn(p) { area(p.0, p.1) })
-    |> list.max(int.compare)
+    |> list.map(fn(p) { #(p.0, p.1, area(p.0, p.1)) })
+    |> list.sort(fn(a, b) {
+      case a.2, b.2 {
+        a, b if a < b -> order.Gt
+        a, b if a > b -> order.Lt
+        _, _ -> order.Eq
+      }
+    })
+    |> list.find(fn(p) { !has_inclusions(tile_pairs, p.0, p.1) })
     as "Expected non-empty list"
   max
 }
