@@ -65,7 +65,7 @@ pub fn pt_2(tiles: List(Coord)) -> Int {
               from, to if from.y <= to.y -> #(from.y, to.y)
               from, to -> #(to.y, from.y)
             }
-            x > min_x && x < max_x && from_y < max_y && to_y > min_y
+            x > min_x && x < max_x && to_y > min_y && from_y < max_y
           }
           Edge(from:, to:) -> {
             let y = from.y
@@ -73,7 +73,7 @@ pub fn pt_2(tiles: List(Coord)) -> Int {
               from, to if from.x <= to.x -> #(from.x, to.x)
               from, to -> #(to.x, from.x)
             }
-            y > min_y && y < max_y && from_x < max_x && to_x > min_x
+            y > min_y && y < max_y && to_x > min_x && from_x < max_x
           }
         }
       })
