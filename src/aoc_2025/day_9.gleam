@@ -75,6 +75,6 @@ pub fn pt_2(tiles: List(Coord)) {
       }
     })
     |> list.find(fn(p) { !has_inclusions(tile_pairs, p.0, p.1) })
-    as "Expected non-empty list"
+    as "No boxes without inclusions found"
   max
 }
