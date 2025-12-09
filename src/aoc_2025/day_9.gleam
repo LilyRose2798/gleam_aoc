@@ -29,40 +29,15 @@ pub fn pt_1(tiles: List(Coord)) -> Int {
   max
 }
 
-fn has_inclusions(tile_pairs: List(#(Coord, Coord)), a: Coord, b: Coord) -> Bool {
-  let #(min_x, max_x) = case a, b {
-    a, b if a.x <= b.x -> #(a.x, b.x)
-    a, b -> #(b.x, a.x)
-  }
-  let #(min_y, max_y) = case a, b {
-    a, b if a.y <= b.y -> #(a.y, b.y)
-    a, b -> #(b.y, a.y)
-  }
-  list.any(tile_pairs, fn(pos) {
-    case pos {
-      #(a, b) if a.x == b.x -> {
-        let x = a.x
-        let #(from_y, to_y) = case a, b {
-          a, b if a.y <= b.y -> #(a.y, b.y)
-          a, b -> #(b.y, a.y)
-        }
-        x > min_x && x < max_x && from_y < max_y && to_y > min_y
-      }
-      #(a, b) -> {
-        let y = a.y
-        let #(from_x, to_x) = case a, b {
-          a, b if a.x <= b.x -> #(a.x, b.x)
-          a, b -> #(b.x, a.x)
-        }
-        y > min_y && y < max_y && from_x < max_x && to_x > min_x
-      }
-    }
-  })
+type Edge {
+  Edge(from: Coord, to: Coord)
 }
 
 pub fn pt_2(tiles: List(Coord)) -> Int {
   let assert Ok(last) = list.last(tiles)
-  let tile_pairs = list.window_by_2([last, ..tiles])
+  let edges =
+    list.window_by_2([last, ..tiles])
+    |> list.map(fn(p) { Edge(from: p.0, to: p.1) })
   let assert Ok(#(_, _, max)) =
     list.combination_pairs(tiles)
     |> list.map(fn(p) { #(p.0, p.1, area(p.0, p.1)) })
@@ -73,7 +48,36 @@ pub fn pt_2(tiles: List(Coord)) -> Int {
         _, _ -> order.Eq
       }
     })
-    |> list.find(fn(p) { !has_inclusions(tile_pairs, p.0, p.1) })
+    |> list.find(fn(p) {
+      let #(min_x, max_x) = case p {
+        #(a, b, _) if a.x <= b.x -> #(a.x, b.x)
+        #(a, b, _) -> #(b.x, a.x)
+      }
+      let #(min_y, max_y) = case p {
+        #(a, b, _) if a.y <= b.y -> #(a.y, b.y)
+        #(a, b, _) -> #(b.y, a.y)
+      }
+      !list.any(edges, fn(edge) {
+        case edge {
+          Edge(from:, to:) if from.x == to.x -> {
+            let x = from.x
+            let #(from_y, to_y) = case from, to {
+              from, to if from.y <= to.y -> #(from.y, to.y)
+              from, to -> #(to.y, from.y)
+            }
+            x > min_x && x < max_x && from_y < max_y && to_y > min_y
+          }
+          Edge(from:, to:) -> {
+            let y = from.y
+            let #(from_x, to_x) = case from, to {
+              from, to if from.x <= to.x -> #(from.x, to.x)
+              from, to -> #(to.x, from.x)
+            }
+            y > min_y && y < max_y && from_x < max_x && to_x > min_x
+          }
+        }
+      })
+    })
     as "No boxes without inclusions found"
   max
 }
