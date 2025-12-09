@@ -20,7 +20,7 @@ fn area(a: Coord, b: Coord) -> Int {
   { int.absolute_value(a.x - b.x) + 1 } * { int.absolute_value(a.y - b.y) + 1 }
 }
 
-pub fn pt_1(tiles: List(Coord)) {
+pub fn pt_1(tiles: List(Coord)) -> Int {
   let assert Ok(max) =
     list.combination_pairs(tiles)
     |> list.map(fn(p) { area(p.0, p.1) })
@@ -29,7 +29,7 @@ pub fn pt_1(tiles: List(Coord)) {
   max
 }
 
-fn has_inclusions(tile_pairs: List(#(Coord, Coord)), a: Coord, b: Coord) {
+fn has_inclusions(tile_pairs: List(#(Coord, Coord)), a: Coord, b: Coord) -> Bool {
   let #(min_x, max_x) = case a, b {
     a, b if a.x <= b.x -> #(a.x, b.x)
     a, b -> #(b.x, a.x)
@@ -60,7 +60,7 @@ fn has_inclusions(tile_pairs: List(#(Coord, Coord)), a: Coord, b: Coord) {
   })
 }
 
-pub fn pt_2(tiles: List(Coord)) {
+pub fn pt_2(tiles: List(Coord)) -> Int {
   let assert Ok(last) = list.last(tiles)
   let tile_pairs = list.window_by_2([last, ..tiles])
   let assert Ok(#(_, _, max)) =
