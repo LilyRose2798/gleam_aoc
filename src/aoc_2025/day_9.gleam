@@ -1,5 +1,4 @@
 import aoc/utils
-import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/order
