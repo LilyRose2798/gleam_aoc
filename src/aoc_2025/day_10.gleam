@@ -60,17 +60,17 @@ fn min_presses_pt_1(light_diagram: Int, buttons: List(Int), presses: Int) -> Int
   }
 }
 
+fn indexes_to_bitwise_int(s: Set(Int)) -> Int {
+  set.fold(s, 0, fn(acc, i) {
+    int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
+  })
+}
+
 pub fn pt_1(machines: List(Machine)) {
   list.map(machines, fn(m) {
     min_presses_pt_1(
-      list.fold(set.to_list(m.light_diagram), 0, fn(acc, i) {
-        int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
-      }),
-      list.map(m.buttons, fn(button) {
-        list.fold(set.to_list(button), 0, fn(acc, i) {
-          int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
-        })
-      }),
+      indexes_to_bitwise_int(m.light_diagram),
+      list.map(m.buttons, indexes_to_bitwise_int),
       1,
     )
   })
