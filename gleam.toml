@@ -10,6 +10,8 @@ gladvent = ">= 2.2.1 and < 3.0.0"
 gleam_community_maths = ">= 2.0.0 and < 3.0.0"
 gleamy_structures = ">= 1.2.0 and < 2.0.0"
 gleam_yielder = ">= 1.1.0 and < 2.0.0"
+shellout = ">= 1.7.0 and < 2.0.0"
+simplifile = ">= 2.3.1 and < 3.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
@@ -27,4 +29,4 @@ gleeunit = ">= 1.0.0 and < 2.0.0"
 7 = { pt_1 = 1499, pt_2 = 24743903847942 }
 8 = { pt_1 = 140008, pt_2 = 9253260633 }
 9 = { pt_1 = 4771532800, pt_2 = 1544362560 }
-10 = { pt_1 = 444 }
+10 = { pt_1 = 444, pt_2 = 16513 }

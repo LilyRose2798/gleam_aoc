@@ -2,11 +2,14 @@ import aoc/utils
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
+import gleam/pair
 import gleam/result
 import gleam/set.{type Set}
 import gleam/string
 import gleam/yielder
 import gleam_community/maths
+import shellout
+import simplifile
 
 pub type Machine {
   Machine(
@@ -70,37 +73,60 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
-fn min_presses_pt_2(
-  joltage_requirements: Dict(Int, Int),
-  buttons: List(Dict(Int, Int)),
-  presses: Int,
-) -> Int {
-  case
-    maths.list_combination_with_repetitions(buttons, presses)
-    |> result.unwrap(yielder.empty())
-    |> yielder.any(fn(buttons) {
-      list.fold(buttons, dict.new(), fn(acc, b) {
-        dict.combine(acc, b, int.add)
-      })
-      == joltage_requirements
-    })
-  {
-    True -> presses
-    False -> min_presses_pt_2(joltage_requirements, buttons, presses + 1)
-  }
-}
+const filename = "formula.z3"
 
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
-    min_presses_pt_2(
-      m.joltage_requirements,
-      list.map(m.buttons, fn(b) {
-        set.to_list(b)
-        |> list.map(fn(i) { #(i, 1) })
-        |> dict.from_list
-      }),
-      1,
-    )
+    let contents =
+      [
+        "(set-logic LIA)",
+        "(set-option :produce-models true)",
+        list.index_map(m.buttons, fn(_, i) {
+          "(declare-const x"
+          <> int.to_string(i)
+          <> " Int)\n"
+          <> "(assert (>= x"
+          <> int.to_string(i)
+          <> " 0))"
+        })
+          |> string.join("\n"),
+        list.map(dict.to_list(m.joltage_requirements), fn(p) {
+          let #(i, v) = p
+          "(assert (= "
+          <> case
+            list.index_map(m.buttons, fn(b, i) { #(i, b) })
+            |> list.filter(fn(p) { set.contains(p.1, i) })
+            |> list.map(pair.first)
+          {
+            [] -> "0"
+            [i] -> "x" <> int.to_string(i)
+            is ->
+              "(+ "
+              <> list.map(is, fn(i) { "x" <> int.to_string(i) })
+              |> string.join(" ")
+              <> ")"
+          }
+          <> " "
+          <> int.to_string(v)
+          <> "))"
+        })
+          |> string.join("\n"),
+        "(minimize (+ "
+          <> list.index_map(m.buttons, fn(_, i) { "x" <> int.to_string(i) })
+        |> string.join(" ")
+          <> "))",
+        "(check-sat)",
+        "(get-objectives)",
+        "(exit)",
+      ]
+      |> string.join("\n")
+    let assert Ok(_) = simplifile.write(to: filename, contents:)
+    let assert Ok(output) =
+      shellout.command("z3", with: [filename], in: ".", opt: [])
+    let assert [_, " " <> n, ..] = string.split(output, ")")
+    let assert Ok(n) = int.parse(n)
+    n
   })
+  |> utils.tap(fn(_) { simplifile.delete(filename) })
   |> int.sum
 }
