@@ -74,7 +74,7 @@ pub fn pt_1(machines: List(Machine)) {
 
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
-    let contents =
+    let formula =
       [
         "(set-logic LIA)",
         "(set-option :produce-models true)",
@@ -119,7 +119,7 @@ pub fn pt_2(machines: List(Machine)) {
     let assert Ok(output) =
       shellout.command(
         "sh",
-        with: ["-euc", "echo '" <> contents <> "' | z3 -in"],
+        with: ["-euc", "echo '" <> formula <> "' | z3 -in"],
         in: ".",
         opt: [],
       )
