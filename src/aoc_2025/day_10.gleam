@@ -120,8 +120,7 @@ pub fn pt_2(machines: List(Machine)) {
     }
     let assert [_, " " <> n, ..] = string.split(output, ")")
       as { "Unexpected Z3 output: " <> output }
-    let assert Ok(n) = int.parse(n) as { "Expected int, got \"" <> n <> "\"" }
-    n
+    utils.unsafe_int_parse(n)
   })
   |> int.sum
 }
