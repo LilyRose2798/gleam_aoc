@@ -90,17 +90,14 @@ pub fn pt_2(machines: List(Machine)) {
         acc <> " (declare-const" <> v <> " Int) (assert (>=" <> v <> " 0))"
       })
       <> list.fold(dict.to_list(m.joltage_requirements), "", fn(acc, p) {
-        acc
-        <> " (assert (= (+"
-        <> list.index_fold(m.buttons, "", fn(acc, b, i) {
-          case set.contains(b, p.0) {
-            True -> acc <> var(i)
-            False -> acc
-          }
-        })
-        <> ") "
-        <> int.to_string(p.1)
-        <> "))"
+        let vs =
+          list.index_fold(m.buttons, "", fn(acc, b, i) {
+            case set.contains(b, p.0) {
+              True -> acc <> var(i)
+              False -> acc
+            }
+          })
+        acc <> " (assert (= (+" <> vs <> ") " <> int.to_string(p.1) <> "))"
       })
       <> " (minimize (+"
       <> list.index_fold(m.buttons, "", fn(acc, _, i) { acc <> var(i) })
