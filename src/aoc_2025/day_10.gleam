@@ -2,6 +2,7 @@ import aoc/utils
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
+import gleam/result
 import gleam/set.{type Set}
 import gleam/string
 import gleam/yielder
@@ -54,7 +55,7 @@ fn min_presses_pt_1(
 ) -> Int {
   case
     maths.list_combination_with_repetitions(buttons, presses)
-    |> utils.unsafe_unwrap
+    |> result.unwrap(yielder.empty())
     |> yielder.any(fn(buttons) {
       list.fold(buttons, set.new(), set.symmetric_difference) == light_diagram
     })
@@ -76,7 +77,7 @@ fn min_presses_pt_2(
 ) -> Int {
   case
     maths.list_combination_with_repetitions(buttons, presses)
-    |> utils.unsafe_unwrap
+    |> result.unwrap(yielder.empty())
     |> yielder.any(fn(buttons) {
       list.fold(buttons, dict.new(), fn(acc, b) {
         dict.combine(acc, b, int.add)
