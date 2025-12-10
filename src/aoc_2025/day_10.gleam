@@ -5,6 +5,8 @@ import gleam/list
 import gleam/set.{type Set}
 import gleam/string
 import shellout
+import simplifile
+import temporary
 
 pub type Machine {
   Machine(
@@ -103,14 +105,13 @@ pub fn pt_2(machines: List(Machine)) {
       <> " (minimize (+"
       <> list.index_fold(m.buttons, "", fn(acc, _, i) { acc <> var(i) })
       <> ")) (check-sat) (get-objectives) (exit)"
-    let output = case
-      shellout.command(
-        "sh",
-        with: ["-euc", "echo '" <> formula <> "' | z3 -in"],
-        in: ".",
-        opt: [],
-      )
-    {
+    let assert Ok(res) =
+      temporary.create(temporary.file(), fn(file_path) {
+        let assert Ok(_) = simplifile.write(formula, to: file_path)
+        shellout.command("z3", with: [file_path], in: ".", opt: [])
+      })
+      as "Failed to create temporary file"
+    let output = case res {
       Ok(output) -> output
       Error(#(i, output)) ->
         panic as {
