@@ -2,6 +2,8 @@ import aoc/utils
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
+import gleam/order
+import gleam/result
 import gleam/set.{type Set}
 import gleam/string
 import gleam/yielder
@@ -70,23 +72,63 @@ pub fn pt_1(machines: List(Machine)) {
 }
 
 fn min_presses_pt_2(
-  joltage_requirements: Dict(Int, Int),
+  required_joltage: Dict(Int, Int),
   buttons: List(Dict(Int, Int)),
   presses: Int,
-) -> Int {
-  echo presses
+) -> Result(Int, Nil) {
+  // echo #("state", required_joltage, "presses", presses)
+  let joltage_values = dict.to_list(required_joltage)
   case
-    maths.list_combination_with_repetitions(buttons, presses)
-    |> utils.unsafe_unwrap
-    |> yielder.any(fn(buttons) {
-      list.fold(buttons, dict.new(), fn(acc, b) {
-        dict.combine(acc, b, int.add)
-      })
-      == joltage_requirements
-    })
+    list.all(joltage_values, fn(p) { p.1 == 0 }),
+    list.any(joltage_values, fn(p) { p.1 < 0 })
   {
-    True -> presses
-    False -> min_presses_pt_2(joltage_requirements, buttons, presses + 1)
+    _, True -> Error(Nil)
+    True, _ -> Ok(presses)
+    False, _ ->
+      case
+        list.combination_pairs(joltage_values)
+        |> list.find_map(fn(p) {
+          case p {
+            #(#(i, v), #(j, w)) if v > w ->
+              case
+                list.filter(buttons, fn(button) {
+                  dict.has_key(button, i) && !dict.has_key(button, j)
+                })
+              {
+                [button] -> Ok(button)
+                _ -> Error(Nil)
+              }
+            #(#(i, v), #(j, w)) if v < w ->
+              case
+                list.filter(buttons, fn(button) {
+                  dict.has_key(button, j) && !dict.has_key(button, i)
+                })
+              {
+                [button] -> Ok(button)
+                _ -> Error(Nil)
+              }
+            _ -> Error(Nil)
+          }
+        })
+      {
+        Ok(button) -> {
+          // echo #("button", dict.keys(button))
+          min_presses_pt_2(
+            dict.combine(required_joltage, button, int.add),
+            buttons,
+            presses + 1,
+          )
+        }
+        Error(Nil) -> {
+          // no easy option to pick
+          list.map(buttons, fn(button) {
+            dict.combine(required_joltage, button, int.add)
+            |> min_presses_pt_2(buttons, presses + 1)
+          })
+          |> result.values
+          |> list.max(order.reverse(int.compare))
+        }
+      }
   }
 }
 
@@ -96,11 +138,12 @@ pub fn pt_2(machines: List(Machine)) {
       m.joltage_requirements,
       list.map(m.buttons, fn(b) {
         set.to_list(b)
-        |> list.map(fn(i) { #(i, 1) })
+        |> list.map(fn(i) { #(i, -1) })
         |> dict.from_list
       }),
-      1,
+      0,
     )
   })
+  |> result.values
   |> int.sum
 }
