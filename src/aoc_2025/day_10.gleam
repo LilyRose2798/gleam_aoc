@@ -9,7 +9,6 @@ import gleam/string
 import gleam/yielder
 import gleam_community/maths
 import shellout
-import simplifile
 
 pub type Machine {
   Machine(
@@ -73,8 +72,6 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
-const filename = "formula.z3"
-
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
     let contents =
@@ -84,12 +81,11 @@ pub fn pt_2(machines: List(Machine)) {
         list.index_map(m.buttons, fn(_, i) {
           "(declare-const x"
           <> int.to_string(i)
-          <> " Int)\n"
-          <> "(assert (>= x"
+          <> " Int) (assert (>= x"
           <> int.to_string(i)
           <> " 0))"
         })
-          |> string.join("\n"),
+          |> string.join(" "),
         list.map(dict.to_list(m.joltage_requirements), fn(p) {
           let #(i, v) = p
           "(assert (= "
@@ -110,7 +106,7 @@ pub fn pt_2(machines: List(Machine)) {
           <> int.to_string(v)
           <> "))"
         })
-          |> string.join("\n"),
+          |> string.join(" "),
         "(minimize (+ "
           <> list.index_map(m.buttons, fn(_, i) { "x" <> int.to_string(i) })
         |> string.join(" ")
@@ -119,14 +115,17 @@ pub fn pt_2(machines: List(Machine)) {
         "(get-objectives)",
         "(exit)",
       ]
-      |> string.join("\n")
-    let assert Ok(_) = simplifile.write(to: filename, contents:)
+      |> string.join(" ")
     let assert Ok(output) =
-      shellout.command("z3", with: [filename], in: ".", opt: [])
+      shellout.command(
+        "sh",
+        with: ["-euc", "echo '" <> contents <> "' | z3 -in"],
+        in: ".",
+        opt: [],
+      )
     let assert [_, " " <> n, ..] = string.split(output, ")")
     let assert Ok(n) = int.parse(n)
     n
   })
-  |> utils.tap(fn(_) { simplifile.delete(filename) })
   |> int.sum
 }
