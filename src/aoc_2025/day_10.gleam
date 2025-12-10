@@ -2,7 +2,6 @@ import aoc/utils
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
-import gleam/pair
 import gleam/set.{type Set}
 import gleam/string
 import shellout
@@ -76,42 +75,34 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
-fn var_name(i: Int) -> String {
-  "x" <> int.to_string(i)
+fn var(i: Int) -> String {
+  " x" <> int.to_string(i)
 }
 
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
     let formula =
-      [
-        "(set-logic LIA)",
-        "(set-option :produce-models true)",
-        list.index_map(m.buttons, fn(_, i) {
-          let var = var_name(i)
-          "(declare-const " <> var <> " Int) (assert (>= " <> var <> " 0))"
+      "(set-logic LIA) (set-option :produce-models true)"
+      <> list.index_fold(m.buttons, "", fn(acc, _, i) {
+        let v = var(i)
+        acc <> " (declare-const" <> v <> " Int) (assert (>=" <> v <> " 0))"
+      })
+      <> list.fold(dict.to_list(m.joltage_requirements), "", fn(acc, p) {
+        acc
+        <> " (assert (= (+"
+        <> list.index_fold(m.buttons, "", fn(acc, b, i) {
+          case set.contains(b, p.0) {
+            True -> acc <> var(i)
+            False -> acc
+          }
         })
-          |> string.join(" "),
-        list.map(dict.to_list(m.joltage_requirements), fn(p) {
-          let #(i, v) = p
-          "(assert (= (+ "
-          <> list.index_map(m.buttons, fn(b, i) { #(i, b) })
-          |> list.filter(fn(p) { set.contains(p.1, i) })
-          |> list.map(fn(p) { var_name(p.0) })
-          |> string.join(" ")
-          <> ") "
-          <> int.to_string(v)
-          <> "))"
-        })
-          |> string.join(" "),
-        "(minimize (+ "
-          <> list.index_map(m.buttons, fn(_, i) { var_name(i) })
-        |> string.join(" ")
-          <> "))",
-        "(check-sat)",
-        "(get-objectives)",
-        "(exit)",
-      ]
-      |> string.join(" ")
+        <> ") "
+        <> int.to_string(p.1)
+        <> "))"
+      })
+      <> " (minimize (+"
+      <> list.index_fold(m.buttons, "", fn(acc, _, i) { acc <> var(i) })
+      <> ")) (check-sat) (get-objectives) (exit)"
     let output = case
       shellout.command(
         "sh",
