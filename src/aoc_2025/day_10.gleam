@@ -123,8 +123,10 @@ pub fn pt_2(machines: List(Machine)) {
         in: ".",
         opt: [],
       )
+      as "Z3 command failed"
     let assert [_, " " <> n, ..] = string.split(output, ")")
-    let assert Ok(n) = int.parse(n)
+      as "Unexpected Z3 output"
+    let assert Ok(n) = int.parse(n) as { "Expected int, got \"" <> n <> "\"" }
     n
   })
   |> int.sum
