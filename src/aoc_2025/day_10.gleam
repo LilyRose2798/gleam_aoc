@@ -74,7 +74,6 @@ fn min_presses_pt_2(
   buttons: List(Dict(Int, Int)),
   presses: Int,
 ) -> Int {
-  echo presses
   case
     maths.list_combination_with_repetitions(buttons, presses)
     |> utils.unsafe_unwrap
