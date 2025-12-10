@@ -76,6 +76,10 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
+fn var_name(i: Int) -> String {
+  "x" <> int.to_string(i)
+}
+
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
     let formula =
@@ -83,11 +87,8 @@ pub fn pt_2(machines: List(Machine)) {
         "(set-logic LIA)",
         "(set-option :produce-models true)",
         list.index_map(m.buttons, fn(_, i) {
-          "(declare-const x"
-          <> int.to_string(i)
-          <> " Int) (assert (>= x"
-          <> int.to_string(i)
-          <> " 0))"
+          let var = var_name(i)
+          "(declare-const " <> var <> " Int) (assert (>= " <> var <> " 0))"
         })
           |> string.join(" "),
         list.map(dict.to_list(m.joltage_requirements), fn(p) {
@@ -95,7 +96,7 @@ pub fn pt_2(machines: List(Machine)) {
           "(assert (= (+ "
           <> list.index_map(m.buttons, fn(b, i) { #(i, b) })
           |> list.filter(fn(p) { set.contains(p.1, i) })
-          |> list.map(fn(p) { "x" <> int.to_string(p.0) })
+          |> list.map(fn(p) { var_name(p.0) })
           |> string.join(" ")
           <> ") "
           <> int.to_string(v)
@@ -103,7 +104,7 @@ pub fn pt_2(machines: List(Machine)) {
         })
           |> string.join(" "),
         "(minimize (+ "
-          <> list.index_map(m.buttons, fn(_, i) { "x" <> int.to_string(i) })
+          <> list.index_map(m.buttons, fn(_, i) { var_name(i) })
         |> string.join(" ")
           <> "))",
         "(check-sat)",
