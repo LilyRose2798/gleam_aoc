@@ -116,14 +116,23 @@ pub fn pt_2(machines: List(Machine)) {
         "(exit)",
       ]
       |> string.join(" ")
-    let assert Ok(output) =
+    let output = case
       shellout.command(
         "sh",
         with: ["-euc", "echo '" <> formula <> "' | z3 -in"],
         in: ".",
         opt: [],
       )
-      as "Z3 command failed"
+    {
+      Ok(output) -> output
+      Error(#(i, output)) ->
+        panic as {
+          "Z3 command failed with exit status "
+          <> int.to_string(i)
+          <> " and output: "
+          <> output
+        }
+    }
     let assert [_, " " <> n, ..] = string.split(output, ")")
       as { "Unexpected Z3 output: " <> output }
     let assert Ok(n) = int.parse(n) as { "Expected int, got \"" <> n <> "\"" }
