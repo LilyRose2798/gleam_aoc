@@ -92,21 +92,12 @@ pub fn pt_2(machines: List(Machine)) {
           |> string.join(" "),
         list.map(dict.to_list(m.joltage_requirements), fn(p) {
           let #(i, v) = p
-          "(assert (= "
-          <> case
-            list.index_map(m.buttons, fn(b, i) { #(i, b) })
-            |> list.filter(fn(p) { set.contains(p.1, i) })
-            |> list.map(pair.first)
-          {
-            [] -> "0"
-            [i] -> "x" <> int.to_string(i)
-            is ->
-              "(+ "
-              <> list.map(is, fn(i) { "x" <> int.to_string(i) })
-              |> string.join(" ")
-              <> ")"
-          }
-          <> " "
+          "(assert (= (+ "
+          <> list.index_map(m.buttons, fn(b, i) { #(i, b) })
+          |> list.filter(fn(p) { set.contains(p.1, i) })
+          |> list.map(fn(p) { "x" <> int.to_string(p.0) })
+          |> string.join(" ")
+          <> ") "
           <> int.to_string(v)
           <> "))"
         })
