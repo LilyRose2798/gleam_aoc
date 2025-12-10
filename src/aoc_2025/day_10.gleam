@@ -3,11 +3,8 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
 import gleam/pair
-import gleam/result
 import gleam/set.{type Set}
 import gleam/string
-import gleam/yielder
-import gleam_community/maths
 import shellout
 
 pub type Machine {
@@ -50,16 +47,11 @@ pub fn parse(input: String) -> List(Machine) {
   })
 }
 
-fn min_presses_pt_1(
-  light_diagram: Set(Int),
-  buttons: List(Set(Int)),
-  presses: Int,
-) -> Int {
+fn min_presses_pt_1(light_diagram: Int, buttons: List(Int), presses: Int) -> Int {
   case
-    maths.list_combination_with_repetitions(buttons, presses)
-    |> result.unwrap(yielder.empty())
-    |> yielder.any(fn(buttons) {
-      list.fold(buttons, set.new(), set.symmetric_difference) == light_diagram
+    list.combinations(buttons, presses)
+    |> list.any(fn(buttons) {
+      list.reduce(buttons, int.bitwise_exclusive_or) == Ok(light_diagram)
     })
   {
     True -> presses
@@ -68,7 +60,19 @@ fn min_presses_pt_1(
 }
 
 pub fn pt_1(machines: List(Machine)) {
-  list.map(machines, fn(m) { min_presses_pt_1(m.light_diagram, m.buttons, 1) })
+  list.map(machines, fn(m) {
+    min_presses_pt_1(
+      list.fold(set.to_list(m.light_diagram), 0, fn(acc, i) {
+        int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
+      }),
+      list.map(m.buttons, fn(button) {
+        list.fold(set.to_list(button), 0, fn(acc, i) {
+          int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
+        })
+      }),
+      1,
+    )
+  })
   |> int.sum
 }
 
