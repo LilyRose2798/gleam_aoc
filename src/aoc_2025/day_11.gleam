@@ -15,6 +15,14 @@ pub fn parse(input: String) -> Dict(String, List(String)) {
 
 fn num_paths(
   devices: Dict(String, List(String)),
+  from: String,
+  to: String,
+) -> Int {
+  do_num_paths(devices, dict.new(), from, to).0
+}
+
+fn do_num_paths(
+  devices: Dict(String, List(String)),
   cache: Dict(#(String, String), Int),
   from: String,
   to: String,
@@ -30,7 +38,7 @@ fn num_paths(
             |> result.unwrap([])
             |> list.fold(#(0, cache), fn(acc, from) {
               let #(n, cache) = acc
-              let #(m, cache) = num_paths(devices, cache, from, to)
+              let #(m, cache) = do_num_paths(devices, cache, from, to)
               #(n + m, cache)
             })
           #(sum, dict.insert(cache, #(from, to), sum))
@@ -41,11 +49,11 @@ fn num_paths(
 }
 
 pub fn pt_1(devices: Dict(String, List(String))) -> Int {
-  num_paths(devices, dict.new(), "you", "out").0
+  num_paths(devices, "you", "out")
 }
 
 pub fn pt_2(devices: Dict(String, List(String))) -> Int {
-  num_paths(devices, dict.new(), "svr", "fft").0
-  * num_paths(devices, dict.new(), "fft", "dac").0
-  * num_paths(devices, dict.new(), "dac", "out").0
+  num_paths(devices, "svr", "fft")
+  * num_paths(devices, "fft", "dac")
+  * num_paths(devices, "dac", "out")
 }
