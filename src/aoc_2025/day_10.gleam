@@ -1,6 +1,7 @@
 import aoc/utils
 import gleam/dict.{type Dict}
 import gleam/int
+import gleam/io
 import gleam/list
 import gleam/set.{type Set}
 import gleam/string
@@ -99,21 +100,21 @@ pub fn pt_2(machines: List(Machine)) {
                 }
               })
               |> string.join(" + ")
-            acc <> sum <> " = " <> int.to_string(v) <> " "
+            acc <> "\n  " <> sum <> " = " <> int.to_string(v)
           }),
         )
       })
     let vars = list.reverse(vars)
     let formula =
-      "Minimize "
+      "Minimize\n  "
       <> string.join(vars, " + ")
-      <> " Bounds "
-      <> list.map(vars, string.append(_, " >= 0")) |> string.join(" ")
-      <> " Subject To "
+      <> "\nBounds"
+      <> list.fold(vars, "", fn(acc, v) { acc <> "\n  " <> v <> " >= 0" })
+      <> "\nSubject To"
       <> conditions
-      <> "Generals "
+      <> "\nGenerals\n  "
       <> string.join(vars, " ")
-      <> " End"
+      <> "\nEnd"
     let assert Ok(res) =
       temporary.create(
         temporary.file() |> temporary.with_suffix(".lp"),
