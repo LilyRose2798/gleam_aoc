@@ -77,50 +77,61 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
-fn var(i: Int) -> String {
-  " x" <> int.to_string(i)
-}
-
 pub fn pt_2(machines: List(Machine)) {
   list.map(machines, fn(m) {
+    let vars =
+      list.range(0, list.length(m.buttons) - 1)
+      |> list.map(fn(i) { "x" <> int.to_string(i) })
     let formula =
-      "(set-logic LIA) (set-option :produce-models true)"
-      <> list.index_fold(m.buttons, "", fn(acc, _, i) {
-        let v = var(i)
-        acc <> " (declare-const" <> v <> " Int) (assert (>=" <> v <> " 0))"
-      })
+      "Minimize "
+      <> string.join(vars, " + ")
+      <> " Bounds "
+      <> list.map(vars, string.append(_, " >= 0")) |> string.join(" ")
+      <> " Subject To "
       <> dict.fold(m.joltage_requirements, "", fn(acc, i, v) {
-        let vs =
-          list.index_fold(m.buttons, "", fn(acc, b, j) {
+        let sum =
+          list.index_fold(m.buttons, [], fn(acc, b, j) {
             case set.contains(b, i) {
-              True -> acc <> var(j)
+              True -> ["x" <> int.to_string(j), ..acc]
               False -> acc
             }
           })
-        acc <> " (assert (= (+" <> vs <> ") " <> int.to_string(v) <> "))"
+          |> string.join(" + ")
+        acc <> sum <> " = " <> int.to_string(v) <> " "
       })
-      <> " (minimize (+"
-      <> list.index_fold(m.buttons, "", fn(acc, _, i) { acc <> var(i) })
-      <> ")) (check-sat) (get-objectives) (exit)"
+      <> "Generals "
+      <> string.join(vars, " ")
+      <> " End"
     let assert Ok(res) =
-      temporary.create(temporary.file(), fn(file_path) {
-        let assert Ok(_) = simplifile.write(formula, to: file_path)
-        shellout.command("z3", with: [file_path], in: ".", opt: [])
-      })
+      temporary.create(
+        temporary.file() |> temporary.with_suffix(".lp"),
+        fn(file_path) {
+          let assert Ok(_) = simplifile.write(formula, to: file_path)
+          shellout.command("scip", with: ["-f", file_path], in: ".", opt: [])
+        },
+      )
       as "Failed to create temporary file"
     let output = case res {
       Ok(output) -> output
       Error(#(i, output)) ->
         panic as {
-          "Z3 command failed with exit status "
+          "SCIP command failed with exit status "
           <> int.to_string(i)
           <> " and output: "
           <> output
         }
     }
-    let assert [_, " " <> n, ..] = string.split(output, ")")
-      as { "Unexpected Z3 output: " <> output }
-    utils.unsafe_int_parse(n)
+    let assert Ok(n) =
+      string.split(output, "\n")
+      |> list.find_map(fn(line) {
+        case line {
+          "objective value:" <> rest ->
+            Ok(string.trim(rest) |> utils.unsafe_int_parse)
+          _ -> Error(Nil)
+        }
+      })
+      as { "Unexpected SCIP output: " <> output }
+    n
   })
   |> int.sum
 }
