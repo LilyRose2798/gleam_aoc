@@ -78,27 +78,39 @@ pub fn pt_1(machines: List(Machine)) {
 }
 
 pub fn pt_2(machines: List(Machine)) {
-  list.map(machines, fn(m) {
-    let vars =
-      list.range(0, list.length(m.buttons) - 1)
-      |> list.map(fn(i) { "x" <> int.to_string(i) })
+  list.sized_chunk(machines, 50)
+  |> list.map(fn(machines) {
+    let #(vars, conditions) =
+      list.index_fold(machines, #([], ""), fn(acc, m, i) {
+        #(
+          list.range(0, list.length(m.buttons) - 1)
+            |> list.fold(acc.0, fn(acc, j) {
+              ["x" <> int.to_string(i) <> "_" <> int.to_string(j), ..acc]
+            }),
+          dict.fold(m.joltage_requirements, acc.1, fn(acc, k, v) {
+            let sum =
+              list.index_fold(m.buttons, [], fn(acc, b, j) {
+                case set.contains(b, k) {
+                  True -> [
+                    "x" <> int.to_string(i) <> "_" <> int.to_string(j),
+                    ..acc
+                  ]
+                  False -> acc
+                }
+              })
+              |> string.join(" + ")
+            acc <> sum <> " = " <> int.to_string(v) <> " "
+          }),
+        )
+      })
+    let vars = list.reverse(vars)
     let formula =
       "Minimize "
       <> string.join(vars, " + ")
       <> " Bounds "
       <> list.map(vars, string.append(_, " >= 0")) |> string.join(" ")
       <> " Subject To "
-      <> dict.fold(m.joltage_requirements, "", fn(acc, i, v) {
-        let sum =
-          list.index_fold(m.buttons, [], fn(acc, b, j) {
-            case set.contains(b, i) {
-              True -> ["x" <> int.to_string(j), ..acc]
-              False -> acc
-            }
-          })
-          |> string.join(" + ")
-        acc <> sum <> " = " <> int.to_string(v) <> " "
-      })
+      <> conditions
       <> "Generals "
       <> string.join(vars, " ")
       <> " End"
