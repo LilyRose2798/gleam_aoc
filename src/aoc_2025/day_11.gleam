@@ -28,9 +28,9 @@ fn num_paths(
           let #(sum, cache) =
             dict.get(devices, from)
             |> result.unwrap([])
-            |> list.fold(#(0, cache), fn(acc, x) {
+            |> list.fold(#(0, cache), fn(acc, from) {
               let #(n, cache) = acc
-              let #(m, cache) = num_paths(devices, cache, x, to)
+              let #(m, cache) = num_paths(devices, cache, from, to)
               #(n + m, cache)
             })
           #(sum, dict.insert(cache, #(from, to), sum))
