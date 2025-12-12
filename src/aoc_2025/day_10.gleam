@@ -90,26 +90,27 @@ pub fn min_presses_pt_2(
   use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: Error(Nil))
   list.fold(joltages, 0, fn(acc, x) { 2 * acc + x % 2 })
   |> dict.get(joltage_parity_map, _)
-  |> result.unwrap([])
-  |> list.fold(Error(Nil), fn(min, button_combination) {
-    let assert Ok(joltage_drops) =
-      dict.get(joltage_drop_map, button_combination)
-      as "Invalid button combination"
-    case
-      list.zip(joltages, joltage_drops)
-      |> list.map(fn(p) { { p.0 - p.1 } / 2 })
-      |> min_presses_pt_2(joltage_drop_map, joltage_parity_map)
-    {
-      Ok(new_min) -> {
-        let new_min = add_ones(button_combination, 2 * new_min)
-        case min {
-          Ok(cur_min) if cur_min < new_min -> min
-          _ -> Ok(new_min)
+  |> result.try(
+    list.fold(_, Error(Nil), fn(min, button_combination) {
+      let assert Ok(joltage_drops) =
+        dict.get(joltage_drop_map, button_combination)
+        as "Invalid button combination"
+      case
+        list.zip(joltages, joltage_drops)
+        |> list.map(fn(p) { { p.0 - p.1 } / 2 })
+        |> min_presses_pt_2(joltage_drop_map, joltage_parity_map)
+      {
+        Ok(new_min) -> {
+          let new_min = add_ones(button_combination, 2 * new_min)
+          case min {
+            Ok(cur_min) if cur_min < new_min -> min
+            _ -> Ok(new_min)
+          }
         }
+        Error(Nil) -> min
       }
-      Error(Nil) -> min
-    }
-  })
+    }),
+  )
 }
 
 pub fn pt_2(machines: List(Machine)) -> Int {
