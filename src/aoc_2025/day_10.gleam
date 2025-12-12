@@ -137,7 +137,7 @@ pub fn pt_2(machines: List(Machine)) -> Int {
           dict.upsert(
             joltage_parity_map,
             list.fold(joltage_drops, 0, fn(acc, i) { 2 * acc + i % 2 }),
-            fn(v) { [button_combination, ..option.unwrap(v, [])] },
+            fn(bcs) { [button_combination, ..option.unwrap(bcs, [])] },
           ),
         )
       })
