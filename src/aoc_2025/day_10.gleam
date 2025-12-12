@@ -1,6 +1,7 @@
 import aoc/utils
 import gleam/bool
 import gleam/dict.{type Dict}
+import gleam/function
 import gleam/int
 import gleam/list
 import gleam/option
@@ -78,8 +79,8 @@ const inf = 999_999_999_999_999
 
 pub fn min_presses_pt_2(
   joltages: List(Int),
-  button_map: Dict(List(Int), List(Int)),
-  parity_map: Dict(List(Int), List(List(Int))),
+  button_map: Dict(List(Bool), List(Int)),
+  parity_map: Dict(List(Int), List(List(Bool))),
 ) -> Int {
   use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: 0)
   use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: inf)
@@ -92,26 +93,26 @@ pub fn min_presses_pt_2(
       list.zip(joltages, joltage_drops) |> list.map(fn(p) { { p.0 - p.1 } / 2 })
     int.min(
       min,
-      int.sum(buttons_to_press)
+      list.count(buttons_to_press, function.identity)
         + 2
         * min_presses_pt_2(next_joltages, button_map, parity_map),
     )
   })
 }
 
-fn button_combinations(n: Int) -> List(List(Int)) {
+fn button_combinations(n: Int) -> List(List(Bool)) {
   do_button_combinations(n, [[]])
 }
 
-fn do_button_combinations(n: Int, acc: List(List(Int))) -> List(List(Int)) {
+fn do_button_combinations(n: Int, acc: List(List(Bool))) -> List(List(Bool)) {
   case n {
     0 -> acc
     _ ->
       do_button_combinations(
         n - 1,
         list.append(
-          list.map(acc, list.prepend(_, 0)),
-          list.map(acc, list.prepend(_, 1)),
+          list.map(acc, list.prepend(_, False)),
+          list.map(acc, list.prepend(_, True)),
         ),
       )
   }
@@ -126,9 +127,7 @@ pub fn pt_2(machines: List(Machine)) {
         let zipped_buttons = list.zip(m.buttons, buttons_to_press)
         let joltages_count =
           list.index_map(m.joltages, fn(_, i) {
-            list.count(zipped_buttons, fn(p) {
-              p.1 == 1 && list.contains(p.0, i)
-            })
+            list.count(zipped_buttons, fn(p) { p.1 && list.contains(p.0, i) })
           })
         let joltages_parity = list.map(joltages_count, fn(i) { i % 2 })
         let button_map =
