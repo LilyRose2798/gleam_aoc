@@ -64,7 +64,7 @@ fn indexes_to_bitwise_int(l: List(Int)) -> Int {
   })
 }
 
-pub fn pt_1(machines: List(Machine)) {
+pub fn pt_1(machines: List(Machine)) -> Int {
   list.map(machines, fn(m) {
     min_presses_pt_1(
       indexes_to_bitwise_int(m.light_diagram),
@@ -118,7 +118,7 @@ fn do_button_combinations(n: Int, acc: List(List(Bool))) -> List(List(Bool)) {
   }
 }
 
-pub fn pt_2(machines: List(Machine)) {
+pub fn pt_2(machines: List(Machine)) -> Int {
   list.map(machines, fn(m) {
     let #(button_map, parity_map) =
       button_combinations(list.length(m.buttons))
