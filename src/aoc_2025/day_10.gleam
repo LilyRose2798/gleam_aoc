@@ -147,6 +147,7 @@ pub fn pt_2(machines: List(Machine)) -> Int {
       })
     let assert Ok(min) =
       min_presses_pt_2(m.joltages, joltage_drop_map, joltage_parity_map)
+      as "No solution found for machine"
     min
   })
   |> int.sum
