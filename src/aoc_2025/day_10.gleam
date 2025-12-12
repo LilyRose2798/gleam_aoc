@@ -75,28 +75,34 @@ pub fn pt_1(machines: List(Machine)) -> Int {
   |> int.sum
 }
 
-const inf = 999_999_999_999_999
-
 pub fn min_presses_pt_2(
   joltages: List(Int),
   button_map: Dict(List(Bool), List(Int)),
   parity_map: Dict(List(Int), List(List(Bool))),
-) -> Int {
-  use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: 0)
-  use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: inf)
+) -> Result(Int, Nil) {
+  use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: Ok(0))
+  use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: Error(Nil))
   list.map(joltages, fn(x) { x % 2 })
   |> dict.get(parity_map, _)
   |> result.unwrap([])
-  |> list.fold(inf, fn(min, buttons_to_press) {
+  |> list.fold(Error(Nil), fn(min, buttons_to_press) {
     let assert Ok(joltage_drops) = dict.get(button_map, buttons_to_press)
-    let next_joltages =
-      list.zip(joltages, joltage_drops) |> list.map(fn(p) { { p.0 - p.1 } / 2 })
-    int.min(
-      min,
-      list.count(buttons_to_press, function.identity)
-        + 2
-        * min_presses_pt_2(next_joltages, button_map, parity_map),
-    )
+      as "Invalid button combination"
+    case
+      list.zip(joltages, joltage_drops)
+      |> list.map(fn(p) { { p.0 - p.1 } / 2 })
+      |> min_presses_pt_2(button_map, parity_map)
+    {
+      Ok(new_min) -> {
+        let new_min =
+          list.count(buttons_to_press, function.identity) + 2 * new_min
+        case min {
+          Ok(cur_min) if cur_min < new_min -> min
+          _ -> Ok(new_min)
+        }
+      }
+      Error(Nil) -> min
+    }
   })
 }
 
@@ -138,7 +144,8 @@ pub fn pt_2(machines: List(Machine)) -> Int {
           })
         #(button_map, parity_map)
       })
-    min_presses_pt_2(m.joltages, button_map, parity_map)
+    let assert Ok(min) = min_presses_pt_2(m.joltages, button_map, parity_map)
+    min
   })
   |> int.sum
 }
