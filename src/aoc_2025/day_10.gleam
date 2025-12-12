@@ -118,7 +118,7 @@ pub fn pt_2(machines: List(Machine)) -> Int {
       list.range(0, int.bitwise_shift_left(1, list.length(m.buttons)) - 1)
       |> list.fold(#(dict.new(), dict.new()), fn(acc, button_combination) {
         let #(joltage_drop_map, joltage_parity_map) = acc
-        let joltages_count =
+        let joltage_drops =
           list.index_map(m.joltages, fn(_, i) {
             list.index_fold(m.buttons, 0, fn(acc, b, j) {
               case
@@ -133,10 +133,10 @@ pub fn pt_2(machines: List(Machine)) -> Int {
             })
           })
         #(
-          dict.insert(joltage_drop_map, button_combination, joltages_count),
+          dict.insert(joltage_drop_map, button_combination, joltage_drops),
           dict.upsert(
             joltage_parity_map,
-            list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 }),
+            list.fold(joltage_drops, 0, fn(acc, i) { 2 * acc + i % 2 }),
             fn(v) { option.unwrap(v, []) |> list.prepend(button_combination) },
           ),
         )
