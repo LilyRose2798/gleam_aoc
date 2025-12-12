@@ -1,7 +1,6 @@
 import aoc/utils
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/function
 import gleam/int
 import gleam/list
 import gleam/option
@@ -122,15 +121,14 @@ pub fn pt_2(machines: List(Machine)) -> Int {
         let joltages_count =
           list.index_map(m.joltages, fn(_, i) {
             list.index_fold(m.buttons, 0, fn(acc, b, j) {
-              acc
-              + case
+              case
                 int.bitwise_shift_left(1, j)
                 |> int.bitwise_and(button_combination)
                 != 0
                 && list.contains(b, i)
               {
-                True -> 1
-                False -> 0
+                True -> acc + 1
+                False -> acc
               }
             })
           })
