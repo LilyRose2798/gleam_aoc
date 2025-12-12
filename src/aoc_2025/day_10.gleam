@@ -77,21 +77,21 @@ pub fn pt_1(machines: List(Machine)) -> Int {
 
 pub fn min_presses_pt_2(
   joltages: List(Int),
-  button_map: Dict(List(Bool), List(Int)),
-  parity_map: Dict(Int, List(List(Bool))),
+  joltage_drop_map: Dict(List(Bool), List(Int)),
+  joltage_parity_map: Dict(Int, List(List(Bool))),
 ) -> Result(Int, Nil) {
   use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: Ok(0))
   use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: Error(Nil))
   list.fold(joltages, 0, fn(acc, x) { 2 * acc + x % 2 })
-  |> dict.get(parity_map, _)
+  |> dict.get(joltage_parity_map, _)
   |> result.unwrap([])
   |> list.fold(Error(Nil), fn(min, buttons_to_press) {
-    let assert Ok(joltage_drops) = dict.get(button_map, buttons_to_press)
+    let assert Ok(joltage_drops) = dict.get(joltage_drop_map, buttons_to_press)
       as "Invalid button combination"
     case
       list.zip(joltages, joltage_drops)
       |> list.map(fn(p) { { p.0 - p.1 } / 2 })
-      |> min_presses_pt_2(button_map, parity_map)
+      |> min_presses_pt_2(joltage_drop_map, joltage_parity_map)
     {
       Ok(new_min) -> {
         let new_min =
@@ -126,10 +126,10 @@ fn do_button_combinations(n: Int, acc: List(List(Bool))) -> List(List(Bool)) {
 
 pub fn pt_2(machines: List(Machine)) -> Int {
   list.map(machines, fn(m) {
-    let #(button_map, parity_map) =
+    let #(joltage_drop_map, joltage_parity_map) =
       button_combinations(list.length(m.buttons))
       |> list.fold(#(dict.new(), dict.new()), fn(acc, buttons_to_press) {
-        let #(button_map, parity_map) = acc
+        let #(joltage_drop_map, joltage_parity_map) = acc
         let zipped_buttons = list.zip(m.buttons, buttons_to_press)
         let joltages_count =
           list.index_map(m.joltages, fn(_, i) {
@@ -137,15 +137,16 @@ pub fn pt_2(machines: List(Machine)) -> Int {
           })
         let joltages_parity =
           list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 })
-        let button_map =
-          dict.insert(button_map, buttons_to_press, joltages_count)
-        let parity_map =
-          dict.upsert(parity_map, joltages_parity, fn(v) {
+        let joltage_drop_map =
+          dict.insert(joltage_drop_map, buttons_to_press, joltages_count)
+        let joltage_parity_map =
+          dict.upsert(joltage_parity_map, joltages_parity, fn(v) {
             option.unwrap(v, []) |> list.prepend(buttons_to_press)
           })
-        #(button_map, parity_map)
+        #(joltage_drop_map, joltage_parity_map)
       })
-    let assert Ok(min) = min_presses_pt_2(m.joltages, button_map, parity_map)
+    let assert Ok(min) =
+      min_presses_pt_2(m.joltages, joltage_drop_map, joltage_parity_map)
     min
   })
   |> int.sum
