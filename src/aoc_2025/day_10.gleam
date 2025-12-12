@@ -75,18 +75,26 @@ pub fn pt_1(machines: List(Machine)) -> Int {
   |> int.sum
 }
 
+fn add_ones(n: Int, acc: Int) -> Int {
+  case n {
+    0 -> acc
+    _ -> add_ones(int.bitwise_and(n, n - 1), acc + 1)
+  }
+}
+
 pub fn min_presses_pt_2(
   joltages: List(Int),
-  joltage_drop_map: Dict(List(Bool), List(Int)),
-  joltage_parity_map: Dict(Int, List(List(Bool))),
+  joltage_drop_map: Dict(Int, List(Int)),
+  joltage_parity_map: Dict(Int, List(Int)),
 ) -> Result(Int, Nil) {
   use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: Ok(0))
   use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: Error(Nil))
   list.fold(joltages, 0, fn(acc, x) { 2 * acc + x % 2 })
   |> dict.get(joltage_parity_map, _)
   |> result.unwrap([])
-  |> list.fold(Error(Nil), fn(min, buttons_to_press) {
-    let assert Ok(joltage_drops) = dict.get(joltage_drop_map, buttons_to_press)
+  |> list.fold(Error(Nil), fn(min, button_combination) {
+    let assert Ok(joltage_drops) =
+      dict.get(joltage_drop_map, button_combination)
       as "Invalid button combination"
     case
       list.zip(joltages, joltage_drops)
@@ -94,8 +102,7 @@ pub fn min_presses_pt_2(
       |> min_presses_pt_2(joltage_drop_map, joltage_parity_map)
     {
       Ok(new_min) -> {
-        let new_min =
-          list.count(buttons_to_press, function.identity) + 2 * new_min
+        let new_min = add_ones(button_combination, 2 * new_min)
         case min {
           Ok(cur_min) if cur_min < new_min -> min
           _ -> Ok(new_min)
@@ -106,42 +113,34 @@ pub fn min_presses_pt_2(
   })
 }
 
-fn button_combinations(n: Int) -> List(List(Bool)) {
-  do_button_combinations(n, [[]])
-}
-
-fn do_button_combinations(n: Int, acc: List(List(Bool))) -> List(List(Bool)) {
-  case n {
-    0 -> acc
-    _ ->
-      do_button_combinations(
-        n - 1,
-        list.append(
-          list.map(acc, list.prepend(_, False)),
-          list.map(acc, list.prepend(_, True)),
-        ),
-      )
-  }
-}
-
 pub fn pt_2(machines: List(Machine)) -> Int {
   list.map(machines, fn(m) {
     let #(joltage_drop_map, joltage_parity_map) =
-      button_combinations(list.length(m.buttons))
-      |> list.fold(#(dict.new(), dict.new()), fn(acc, buttons_to_press) {
+      list.range(0, int.bitwise_shift_left(1, list.length(m.buttons)) - 1)
+      |> list.fold(#(dict.new(), dict.new()), fn(acc, button_combination) {
         let #(joltage_drop_map, joltage_parity_map) = acc
-        let zipped_buttons = list.zip(m.buttons, buttons_to_press)
         let joltages_count =
           list.index_map(m.joltages, fn(_, i) {
-            list.count(zipped_buttons, fn(p) { p.1 && list.contains(p.0, i) })
+            list.index_fold(m.buttons, 0, fn(acc, b, j) {
+              acc
+              + case
+                int.bitwise_shift_left(1, j)
+                |> int.bitwise_and(button_combination)
+                != 0
+                && list.contains(b, i)
+              {
+                True -> 1
+                False -> 0
+              }
+            })
           })
-        let joltages_parity =
-          list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 })
         let joltage_drop_map =
-          dict.insert(joltage_drop_map, buttons_to_press, joltages_count)
+          dict.insert(joltage_drop_map, button_combination, joltages_count)
+        let joltage_parity =
+          list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 })
         let joltage_parity_map =
-          dict.upsert(joltage_parity_map, joltages_parity, fn(v) {
-            option.unwrap(v, []) |> list.prepend(buttons_to_press)
+          dict.upsert(joltage_parity_map, joltage_parity, fn(v) {
+            option.unwrap(v, []) |> list.prepend(button_combination)
           })
         #(joltage_drop_map, joltage_parity_map)
       })
