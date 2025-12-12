@@ -78,11 +78,11 @@ pub fn pt_1(machines: List(Machine)) -> Int {
 pub fn min_presses_pt_2(
   joltages: List(Int),
   button_map: Dict(List(Bool), List(Int)),
-  parity_map: Dict(List(Int), List(List(Bool))),
+  parity_map: Dict(Int, List(List(Bool))),
 ) -> Result(Int, Nil) {
   use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: Ok(0))
   use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: Error(Nil))
-  list.map(joltages, fn(x) { x % 2 })
+  list.fold(joltages, 0, fn(acc, x) { 2 * acc + x % 2 })
   |> dict.get(parity_map, _)
   |> result.unwrap([])
   |> list.fold(Error(Nil), fn(min, buttons_to_press) {
@@ -135,7 +135,8 @@ pub fn pt_2(machines: List(Machine)) -> Int {
           list.index_map(m.joltages, fn(_, i) {
             list.count(zipped_buttons, fn(p) { p.1 && list.contains(p.0, i) })
           })
-        let joltages_parity = list.map(joltages_count, fn(i) { i % 2 })
+        let joltages_parity =
+          list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 })
         let button_map =
           dict.insert(button_map, buttons_to_press, joltages_count)
         let parity_map =
