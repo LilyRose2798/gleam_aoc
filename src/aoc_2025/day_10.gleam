@@ -1,18 +1,17 @@
 import aoc/utils
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/list
-import gleam/set.{type Set}
+import gleam/option
+import gleam/result
 import gleam/string
-import shellout
-import simplifile
-import temporary
 
 pub type Machine {
   Machine(
-    light_diagram: Set(Int),
-    buttons: List(Set(Int)),
-    joltage_requirements: Dict(Int, Int),
+    light_diagram: List(Int),
+    buttons: List(List(Int)),
+    joltages: List(Int),
   )
 }
 
@@ -25,13 +24,14 @@ pub fn parse(input: String) -> List(Machine) {
       string.drop_start(light_diagram, 1)
       |> string.drop_end(1)
       |> string.to_utf_codepoints
-      |> list.index_fold(set.new(), fn(acc, c, i) {
+      |> list.index_fold([], fn(acc, c, i) {
         case c == hash {
-          True -> set.insert(acc, i)
+          True -> [i, ..acc]
           False -> acc
         }
       })
-    let assert [joltage_requirements, ..buttons] =
+      |> list.reverse
+    let assert [joltages, ..buttons] =
       list.reverse(rest)
       |> list.map(fn(f) {
         string.drop_start(f, 1)
@@ -40,11 +40,8 @@ pub fn parse(input: String) -> List(Machine) {
         |> list.map(utils.unsafe_int_parse)
       })
       as "Expected at least two fields"
-    let buttons = list.reverse(buttons) |> list.map(set.from_list)
-    let joltage_requirements =
-      list.index_map(joltage_requirements, fn(x, i) { #(i, x) })
-      |> dict.from_list
-    Machine(light_diagram:, buttons:, joltage_requirements:)
+    let buttons = list.reverse(buttons)
+    Machine(light_diagram:, buttons:, joltages:)
   })
 }
 
@@ -60,8 +57,8 @@ fn min_presses_pt_1(light_diagram: Int, buttons: List(Int), presses: Int) -> Int
   }
 }
 
-fn indexes_to_bitwise_int(s: Set(Int)) -> Int {
-  set.fold(s, 0, fn(acc, i) {
+fn indexes_to_bitwise_int(l: List(Int)) -> Int {
+  list.fold(l, 0, fn(acc, i) {
     int.bitwise_shift_left(1, i) |> int.bitwise_or(acc)
   })
 }
@@ -77,73 +74,72 @@ pub fn pt_1(machines: List(Machine)) {
   |> int.sum
 }
 
-pub fn pt_2(machines: List(Machine)) {
-  list.sized_chunk(machines, 50)
-  |> list.map(fn(machines) {
-    let #(vars, conditions) =
-      list.index_fold(machines, #([], ""), fn(acc, m, i) {
-        #(
-          list.range(0, list.length(m.buttons) - 1)
-            |> list.fold(acc.0, fn(acc, j) {
-              ["x" <> int.to_string(i) <> "_" <> int.to_string(j), ..acc]
-            }),
-          dict.fold(m.joltage_requirements, acc.1, fn(acc, k, v) {
-            let sum =
-              list.index_fold(m.buttons, [], fn(acc, b, j) {
-                case set.contains(b, k) {
-                  True -> [
-                    "x" <> int.to_string(i) <> "_" <> int.to_string(j),
-                    ..acc
-                  ]
-                  False -> acc
-                }
-              })
-              |> string.join(" + ")
-            acc <> "\n  " <> sum <> " = " <> int.to_string(v)
-          }),
-        )
-      })
-    let vars = list.reverse(vars)
-    let formula =
-      "Minimize\n  "
-      <> string.join(vars, " + ")
-      <> "\nBounds"
-      <> list.fold(vars, "", fn(acc, v) { acc <> "\n  " <> v <> " >= 0" })
-      <> "\nSubject To"
-      <> conditions
-      <> "\nGenerals\n  "
-      <> string.join(vars, " ")
-      <> "\nEnd"
-    let assert Ok(res) =
-      temporary.create(
-        temporary.file() |> temporary.with_suffix(".lp"),
-        fn(file_path) {
-          let assert Ok(_) = simplifile.write(formula, to: file_path)
-          shellout.command("scip", with: ["-f", file_path], in: ".", opt: [])
-        },
+const inf = 999_999_999_999_999
+
+pub fn min_presses_pt_2(
+  joltages: List(Int),
+  button_map: Dict(List(Int), List(Int)),
+  parity_map: Dict(List(Int), List(List(Int))),
+) -> Int {
+  use <- bool.guard(list.all(joltages, fn(x) { x == 0 }), return: 0)
+  use <- bool.guard(list.any(joltages, fn(x) { x < 0 }), return: inf)
+  list.map(joltages, fn(x) { x % 2 })
+  |> dict.get(parity_map, _)
+  |> result.unwrap([])
+  |> list.fold(inf, fn(min, buttons_to_press) {
+    let assert Ok(joltage_drops) = dict.get(button_map, buttons_to_press)
+    let next_joltages =
+      list.zip(joltages, joltage_drops) |> list.map(fn(p) { { p.0 - p.1 } / 2 })
+    int.min(
+      min,
+      int.sum(buttons_to_press)
+        + 2
+        * min_presses_pt_2(next_joltages, button_map, parity_map),
+    )
+  })
+}
+
+fn button_combinations(n: Int) -> List(List(Int)) {
+  do_button_combinations(n, [[]])
+}
+
+fn do_button_combinations(n: Int, acc: List(List(Int))) -> List(List(Int)) {
+  case n {
+    0 -> acc
+    _ ->
+      do_button_combinations(
+        n - 1,
+        list.append(
+          list.map(acc, list.prepend(_, 0)),
+          list.map(acc, list.prepend(_, 1)),
+        ),
       )
-      as "Failed to create temporary file"
-    let output = case res {
-      Ok(output) -> output
-      Error(#(i, output)) ->
-        panic as {
-          "SCIP command failed with exit status "
-          <> int.to_string(i)
-          <> " and output: "
-          <> output
-        }
-    }
-    let assert Ok(n) =
-      string.split(output, "\n")
-      |> list.find_map(fn(line) {
-        case line {
-          "objective value:" <> rest ->
-            Ok(string.trim(rest) |> utils.unsafe_int_parse)
-          _ -> Error(Nil)
-        }
+  }
+}
+
+pub fn pt_2(machines: List(Machine)) {
+  list.map(machines, fn(m) {
+    let #(button_map, parity_map) =
+      button_combinations(list.length(m.buttons))
+      |> list.fold(#(dict.new(), dict.new()), fn(acc, buttons_to_press) {
+        let #(button_map, parity_map) = acc
+        let zipped_buttons = list.zip(m.buttons, buttons_to_press)
+        let joltages_count =
+          list.index_map(m.joltages, fn(_, i) {
+            list.count(zipped_buttons, fn(p) {
+              p.1 == 1 && list.contains(p.0, i)
+            })
+          })
+        let joltages_parity = list.map(joltages_count, fn(i) { i % 2 })
+        let button_map =
+          dict.insert(button_map, buttons_to_press, joltages_count)
+        let parity_map =
+          dict.upsert(parity_map, joltages_parity, fn(v) {
+            option.unwrap(v, []) |> list.prepend(buttons_to_press)
+          })
+        #(button_map, parity_map)
       })
-      as { "Unexpected SCIP output: " <> output }
-    n
+    min_presses_pt_2(m.joltages, button_map, parity_map)
   })
   |> int.sum
 }
