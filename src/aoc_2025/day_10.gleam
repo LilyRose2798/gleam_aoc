@@ -132,15 +132,14 @@ pub fn pt_2(machines: List(Machine)) -> Int {
               }
             })
           })
-        let joltage_drop_map =
-          dict.insert(joltage_drop_map, button_combination, joltages_count)
-        let joltage_parity =
-          list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 })
-        let joltage_parity_map =
-          dict.upsert(joltage_parity_map, joltage_parity, fn(v) {
-            option.unwrap(v, []) |> list.prepend(button_combination)
-          })
-        #(joltage_drop_map, joltage_parity_map)
+        #(
+          dict.insert(joltage_drop_map, button_combination, joltages_count),
+          dict.upsert(
+            joltage_parity_map,
+            list.fold(joltages_count, 0, fn(acc, i) { 2 * acc + i % 2 }),
+            fn(v) { option.unwrap(v, []) |> list.prepend(button_combination) },
+          ),
+        )
       })
     let assert Ok(min) =
       min_presses_pt_2(m.joltages, joltage_drop_map, joltage_parity_map)
